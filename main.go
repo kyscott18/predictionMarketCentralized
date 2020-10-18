@@ -104,11 +104,13 @@ type ContractSet struct {
 func (cs *ContractSet) buySet(mp *MarketPlayer, amount float32) {
 	price := amount
 
+	//check if enough usd
 	if price > mp.balance {
 		fmt.Println("You don't have enough usd")
 		return
 	}
 
+	//remove usd from user
 	mp.balance = mp.balance - price
 
 	//add contracts to user
@@ -128,6 +130,46 @@ func (cs *ContractSet) buySet(mp *MarketPlayer, amount float32) {
 
 	//verbose statement
 	fmt.Println("User", mp.id, "bought", amount, "contract sets from the event", cs.event)
+	fmt.Print("\n")
+
+}
+
+func (cs *ContractSet) sellSet(mp *MarketPlayer, amount float32) {
+	price := amount
+
+	//check if enough contracts
+	for i := 0; i < len(cs.markets); i++ {
+		owned := false
+		for j := 0; i < len(mp.contracts); j++ {
+			if mp.contracts[j].condition == cs.markets[j].p.contract.condition {
+				if mp.contracts[j].amount < amount {
+					fmt.Println("you don't have enough contracts")
+					return
+				}
+				owned = true
+			}
+		}
+		if !owned {
+			fmt.Println("you don't have enough contracts")
+			return
+		}
+	}
+
+	//remove contracts from user
+	for i := 0; i < len(cs.markets); i++ {
+		for j := 0; i < len(mp.contracts); j++ {
+			if mp.contracts[j].condition == cs.markets[j].p.contract.condition {
+				mp.contracts[j].amount = mp.contracts[j].amount - amount
+			}
+		}
+	}
+
+	//add usd to user
+	mp.balance = mp.balance + price
+
+	//verbose statement
+	fmt.Println("User", mp.id, "sold", amount, "contract sets from the event", cs.event)
+	fmt.Print("\n")
 
 }
 
@@ -204,6 +246,19 @@ func (mp *MarketPlayer) buySet(cs *ContractSet, amount float32) {
 	cs.buySet(mp, amount)
 }
 
+func (mp *MarketPlayer) sellSet(cs *ContractSet, amount float32) {
+	cs.sellSet(mp, amount)
+}
+
+func (mp MarketPlayer) printState() {
+	fmt.Println("User", mp.id, "has a balance of", mp.balance)
+	fmt.Println("Contracts:")
+	for i := 0; i < len(mp.contracts); i++ {
+		fmt.Println("Condition:", mp.contracts[i].condition, ", amount:", mp.contracts[i].amount)
+	}
+	fmt.Printf("\n")
+}
+
 func newMarketPlayer(id int, startingBalance float32) MarketPlayer {
 	mp := MarketPlayer{id, startingBalance, make([]Contract, 0)}
 	return mp
@@ -213,5 +268,8 @@ func main() {
 	cs := newContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200)
 	//verbose statement
 	cs.printState()
-	//mp1 := newMarketPlayer(1, 20)
+	mp1 := newMarketPlayer(1, 20)
+	mp1.buyContract(cs.event, &cs.markets[0], 5)
+	mp1.printState()
+	cs.printState()
 }
