@@ -35,10 +35,21 @@ func (mm MarketMaker) Make(cs *markets.ContractSet) {
 			}
 			return eq
 		}
-		initialGuess := 1.5
-		iter := 3
+		//TODO: find a quick algorithm for initial guess
+		initialGuess := 3.0
+		iter := 7
 
-		result, bull := root.Newton(f, initialGuess, iter)
-		fmt.Println(result, bull)
+		//TODO: use the result to buy a set of result contracts and then sell them in the individual markets
+		result, _ := root.Newton(f, initialGuess, iter)
+		amount := float32(result)
+		mm.profit = mm.profit + amount
+		
+		//buy a set of result contracts
+		cs.BuySet(&mm.profit, &mm.intermediates, amount)
+		mm.profit = mm.profit - amount
+
+		for i := 0; i < len(cs.Markets); i++ {
+			fmt.Println(cs.Markets[i].SellContract(cs.Event, &mm.profit, &mm.intermediates, amount))
+		}
 	}
 }
