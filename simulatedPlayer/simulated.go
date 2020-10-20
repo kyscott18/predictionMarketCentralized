@@ -1,12 +1,13 @@
 package simulatedPlayer
 
 import (
-	"example.com/predictionMarketCentralized/players"
-	"example.com/predictionMarketCentralized/markets"
-	"math/rand"
-	"math"
-	"time"
 	"fmt"
+	"math"
+	"math/rand"
+	"time"
+
+	"example.com/predictionMarketCentralized/markets"
+	"example.com/predictionMarketCentralized/players"
 )
 
 type SimulatedPlayer struct {
@@ -20,7 +21,7 @@ func NewSimulatedPlayer(id int, balance float32) SimulatedPlayer {
 
 func (sp *SimulatedPlayer) Take(event string, m *markets.Market) {
 	//get the ratio of the market
-	ratio := m.P.Usd/m.P.Contract.Amount
+	ratio := m.getRatioFloat32()
 
 	//use a bernoulli distribution to predict if we will take or not
 	// bernoulli distribution with p = ratio
@@ -30,7 +31,7 @@ func (sp *SimulatedPlayer) Take(event string, m *markets.Market) {
 
 	//calculate an amount if you are going to take
 	if take {
-		amount := math.Round(r1.Float64()*10+1)
+		amount := math.Round(r1.Float64()*10 + 1)
 		fmt.Println("User", sp.mp.Id, "has chosen to buy", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
 		//buy the contracts if you have funds left
 		sp.mp.BuyContract(event, m, float32(amount))
@@ -39,4 +40,3 @@ func (sp *SimulatedPlayer) Take(event string, m *markets.Market) {
 	}
 
 }
-

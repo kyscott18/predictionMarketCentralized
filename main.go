@@ -26,11 +26,11 @@ func main() {
 	// cs.PrintState()
 
 	bots := make([]simulatedPlayer.SimulatedPlayer,0)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 100; i++ {
 		bots = append(bots, simulatedPlayer.NewSimulatedPlayer(i, 50))
 	}
 	for round := 0; round < 800; round++ {
-		for i := 0; i < 3; i++ {
+		for i := 0; i < 100; i++ {
 			for j := 0; j < len(cs.Markets); j++ {
 				bots[i].Take(cs.Event, &cs.Markets[j])
 				mm.Make(&cs)

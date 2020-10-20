@@ -35,14 +35,14 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 	for i := 0; i < len(cs.Markets); i++ {
 		r = append(r, float64(cs.Markets[i].P.Usd))
 		c = append(c, float64(cs.Markets[i].P.Contract.Amount))
-		totalPrice = totalPrice + r[i]/c[i]
+		totalPrice = totalPrice + cs.Markets[i].GetRatioFloat64()
 	}
 
 	if totalPrice > 1 {
 		f := func(x float64) float64 {
 			var eq float64 = -1
 			for i := 0; i < len(cs.Markets); i++ {
-				eq = eq + ((r[i]-(r[i]*x)/(c[i]+x))/(c[i] + x))
+				eq = eq + ((r[i] - (r[i]*x)/(c[i]+x)) / (c[i] + x))
 			}
 			return eq
 		}
@@ -53,7 +53,7 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 		result, _ := root.Newton(f, initialGuess, iter)
 		amount := float32(result)
 		mm.profit = mm.profit + amount
-		
+
 		//buy contracts as a set
 		success := cs.BuySet(&mm.profit, &mm.intermediates, amount)
 		mm.profit = mm.profit - amount
@@ -79,7 +79,7 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 		f := func(x float64) float64 {
 			var eq float64 = -1
 			for i := 0; i < len(cs.Markets); i++ {
-				eq = eq + ((r[i]+(r[i]*x)/(c[i]+x))/(c[i] - x))
+				eq = eq + ((r[i] + (r[i]*x)/(c[i]+x)) / (c[i] - x))
 			}
 			return eq
 		}

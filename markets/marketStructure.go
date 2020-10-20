@@ -20,6 +20,14 @@ type Market struct {
 	Condition string
 }
 
+func (m Market) GetRatioFloat32() float32 {
+	return m.P.Usd / m.P.Contract.Amount
+}
+
+func (m Market) GetRatioFloat64() float64 {
+	return float64(m.P.Usd) / float64(m.P.Contract.Amount)
+}
+
 //ContractSet is the set of markets representing an event
 type ContractSet struct {
 	Markets []Market
@@ -39,9 +47,9 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 	//verbose statement
 	fmt.Println("Newly created ContractSet")
 	fmt.Println("Event:", event)
-	fmt.Println("Conditions:", conditions) 
+	fmt.Println("Conditions:", conditions)
 	fmt.Println("Ratios:", ratios)
-	fmt.Println("NumContracts", numContracts) 
+	fmt.Println("NumContracts", numContracts)
 	fmt.Println()
 	return contractSet
 }
