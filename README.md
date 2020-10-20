@@ -2,8 +2,9 @@ This is going to be a proof of concept for my prediction market technology that 
 Contracts are giving value upon a condition. Contract sets are mutually exclusive and total. Each contract has a separate liquidity pool with a constant product automated market maker. Second level market making is done by either buying or selling a set of contracts. 
 1. Allow for the creation of bets, creation of markets for bets and underlying liquidity pools, 
 2. Create market players and swaps
-2. Implement second level market making 
-3. Verification of bets and trading in, done by verifying outcome of event
+3. Implement second level market making 
+4. Simulated Participants using the ratios and binomial distributions
+5. Verification of bets and trading in, done by verifying outcome of event
 
 
 class contract {
