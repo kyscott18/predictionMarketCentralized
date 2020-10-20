@@ -15,10 +15,12 @@ func main() {
 	cs.PrintState()
 	mm := maker.NewMarketMaker()
 	mm.Make(&cs)
+	mm.PrintState()
 	cs.PrintState()
 	mp1.SellContract(cs.Event, &cs.Markets[0], 5)
 	mp1.PrintState()
 	cs.PrintState()
 	mm.Make(&cs)
+	mm.PrintState()
 	cs.PrintState()
 }

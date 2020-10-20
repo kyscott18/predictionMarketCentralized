@@ -55,13 +55,25 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 		mm.profit = mm.profit + amount
 		
 		//buy contracts as a set
-		cs.BuySet(&mm.profit, &mm.intermediates, amount)
+		success := cs.BuySet(&mm.profit, &mm.intermediates, amount)
 		mm.profit = mm.profit - amount
+		if success != -1 {
+			fmt.Println("MarketMaker bought", amount, "contracts sets from the event", cs.Event, "for $", amount)
+		} else {
+			fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
+		}
 
 		//sell contracts to individual markets
 		for i := 0; i < len(cs.Markets); i++ {
-			fmt.Println(cs.Markets[i].SellContract(cs.Event, &mm.profit, &mm.intermediates, amount), "sell")
+			price := cs.Markets[i].SellContract(cs.Event, &mm.profit, &mm.intermediates, amount)
+			if price != -1 {
+				fmt.Println("MarketMaker sold", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
+			} else {
+				fmt.Println("Market Maker doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+			}
 		}
+
+		fmt.Printf("\n")
 
 	} else if totalPrice < 1 {
 		f := func(x float64) float64 {
@@ -81,11 +93,24 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 
 		//buy contracts from indiviual markets
 		for i := 0; i < len(cs.Markets); i++ {
-			fmt.Println(cs.Markets[i].BuyContract(cs.Event, &mm.profit, &mm.intermediates, amount), "buy")
+			price := cs.Markets[i].BuyContract(cs.Event, &mm.profit, &mm.intermediates, amount)
+			if price != -1 {
+				fmt.Println("MarketMaker bought", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
+			} else {
+				fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+			}
 		}
 
 		//Sell contracts as a set
-		cs.SellSet(&mm.profit, &mm.intermediates, amount)
+		success := cs.SellSet(&mm.profit, &mm.intermediates, amount)
+		//verbose statement
+		if success != -1 {
+			fmt.Println("MarketMaker sold", amount, "contracts sets from the event", cs.Event, "for $", amount)
+		} else {
+			fmt.Println("MarketMaker doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
+		}
+
+		fmt.Printf("\n")
 		mm.profit = mm.profit - amount
 	}
 }
