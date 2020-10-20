@@ -1,6 +1,7 @@
 package main
 
 import (
+	"example.com/predictionMarketCentralized/maker"
 	"example.com/predictionMarketCentralized/markets"
 	"example.com/predictionMarketCentralized/players"
 )
@@ -276,10 +277,9 @@ func main() {
 	//verbose statement
 	cs.PrintState()
 	mp1 := players.NewMarketPlayer(1, 20)
-	mp1.BuySet(&cs, 5)
+	mp1.BuyContract(cs.Event, &cs.Markets[0], 5)
 	mp1.PrintState()
 	cs.PrintState()
-	mp1.SellSet(&cs, 4)
-	mp1.PrintState()
-	cs.PrintState()
+	mm := maker.NewMarketMaker()
+	mm.Make(&cs)
 }
