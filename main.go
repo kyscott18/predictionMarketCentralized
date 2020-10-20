@@ -8,7 +8,6 @@ import (
 
 func main() {
 	cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200)
-	//verbose statement
 	cs.PrintState()
 	mp1 := players.NewMarketPlayer(1, 20)
 	mp1.BuyContract(cs.Event, &cs.Markets[0], 5)

@@ -26,20 +26,29 @@ type ContractSet struct {
 	Event   string
 }
 
+//NewContractSet returns a newly created ContractSet
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32) ContractSet {
 	markets := make([]Market, 0)
 	for i := 0; i < len(conditions); i++ {
-
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
 		p := Pool{contract, usd}
 		markets = append(markets, Market{p, conditions[i]})
 	}
 	contractSet := ContractSet{markets, event}
+	//verbose statement
+	fmt.Println("Newly created ContractSet")
+	fmt.Println("Event:", event)
+	fmt.Println("Conditions:", conditions) 
+	fmt.Println("Ratios:", ratios)
+	fmt.Println("NumContracts", numContracts) 
+	fmt.Println()
 	return contractSet
 }
 
+//PrintState prints the state of the ContractSet
 func (cs ContractSet) PrintState() {
+	fmt.Println("State of ContractSet")
 	fmt.Println("Event: ", cs.Event)
 	for i := 0; i < len(cs.Markets); i++ {
 		fmt.Println("Condition: ", cs.Markets[i].Condition)

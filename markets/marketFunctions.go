@@ -37,7 +37,6 @@ func (m *Market) BuyContract(event string, balance *float32, contracts *[]Contra
 		index = len(*contracts)
 		*contracts = append(*contracts, Contract{m.P.Contract.Condition, 0})
 	}
-
 	(*contracts)[index].Amount = (*contracts)[index].Amount + amount
 
 	return price
@@ -60,7 +59,6 @@ func (m *Market) SellContract(event string, balance *float32, contracts *[]Contr
 			break
 		}
 	}
-
 	if !owned {
 		return -1
 	}
@@ -79,12 +77,6 @@ func (m *Market) SellContract(event string, balance *float32, contracts *[]Contr
 
 	return price
 }
-
-// //ContractSet is the set of markets representing an event
-// type ContractSet struct {
-// 	markets []Market
-// 	event   string
-// }
 
 func (cs *ContractSet) BuySet(balance *float32, contracts *[]Contract, amount float32) float32 {
 	price := amount
@@ -112,11 +104,7 @@ func (cs *ContractSet) BuySet(balance *float32, contracts *[]Contract, amount fl
 		}
 	}
 
-	// //verbose statement
-	// fmt.Println("User", mp.id, "bought", amount, "contract sets from the event", cs.event)
-	// fmt.Print("\n")
 	return price
-
 }
 
 func (cs *ContractSet) SellSet(balance *float32, contracts *[]Contract, amount float32) float32 {
@@ -151,10 +139,6 @@ func (cs *ContractSet) SellSet(balance *float32, contracts *[]Contract, amount f
 
 	//add usd to user
 	*balance = *balance + price
-
-	// //verbose statement
-	// fmt.Println("User", mp.id, "sold", amount, "contract sets from the event", cs.event)
-	// fmt.Print("\n")
+	
 	return price
-
 }
