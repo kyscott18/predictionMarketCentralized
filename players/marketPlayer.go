@@ -7,7 +7,7 @@ import (
 )
 
 type MarketPlayer struct {
-	id        int
+	Id        int
 	balance   float32
 	contracts []markets.Contract
 }
@@ -18,9 +18,9 @@ func (mp *MarketPlayer) BuyContract(event string, m *markets.Market, amount floa
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.id, "bought", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
+		fmt.Println("User", mp.Id, "bought", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
 	} else {
-		fmt.Println("User", mp.id, "doesn't have enough funds to buy", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
 	}
 	fmt.Printf("\n")
 }
@@ -31,9 +31,9 @@ func (mp *MarketPlayer) SellContract(event string, m *markets.Market, amount flo
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.id, "sold", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
+		fmt.Println("User", mp.Id, "sold", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
 	} else {
-		fmt.Println("User", mp.id, "doesn't have enough contracts to sell", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
 	}
 	fmt.Printf("\n")
 }
@@ -43,9 +43,9 @@ func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32) {
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.id, "bought", amount, "contracts sets from the event", cs.Event, "for $", price)
+		fmt.Println("User", mp.Id, "bought", amount, "contracts sets from the event", cs.Event, "for $", price)
 	} else {
-		fmt.Println("User", mp.id, "doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
+		fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
 	}
 	fmt.Printf("\n")
 }
@@ -55,16 +55,16 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32) {
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.id, "sold", amount, "contracts sets from the event", cs.Event, "for $", price)
+		fmt.Println("User", mp.Id, "sold", amount, "contracts sets from the event", cs.Event, "for $", price)
 	} else {
-		fmt.Println("User", mp.id, "doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
+		fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
 	}
 	fmt.Printf("\n")
 }
 
 func (mp MarketPlayer) PrintState() {
 	fmt.Println("State of MarketPlayer")
-	fmt.Println("User", mp.id, "has a balance of", mp.balance)
+	fmt.Println("User", mp.Id, "has a balance of", mp.balance)
 	fmt.Println("Contracts:")
 	for i := 0; i < len(mp.contracts); i++ {
 		fmt.Println("Condition:", mp.contracts[i].Condition, ", amount:", mp.contracts[i].Amount)
