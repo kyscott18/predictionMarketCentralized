@@ -1,16 +1,17 @@
 package cpmm
 
 //From Uniswap
+//amount sold to amount bought
 func GetInputPrice(inputAmount float32, inputReserve float32, outputReserve float32) float32 {
-	inputAmountWithFee := inputAmount * 997
-	numerator := inputAmountWithFee * outputReserve
-	denominator := (inputReserve * 1000) + inputAmountWithFee
+	numerator := inputAmount * outputReserve
+	denominator := inputReserve + inputAmount
 	return numerator / denominator
 }
 
 // From Uniswap
+//amount bought to amount sold
 func GetOutputPrice(outputAmount float32, inputReserve float32, outputReserve float32) float32 {
-	numerator := inputReserve * outputAmount * 1000
-	denominator := (outputReserve - outputAmount) * 997
-	return numerator/denominator + 1
+	numerator := inputReserve * outputAmount 
+	denominator := outputReserve - outputAmount
+	return numerator/denominator
 }
