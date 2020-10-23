@@ -32,6 +32,8 @@ func (m Market) GetRatioFloat64() float64 {
 type ContractSet struct {
 	Markets []Market
 	Event   string
+	//Backing float32
+	Made bool
 }
 
 //NewContractSet returns a newly created ContractSet
@@ -43,7 +45,7 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 		p := Pool{contract, usd}
 		markets = append(markets, Market{p, conditions[i]})
 	}
-	contractSet := ContractSet{markets, event}
+	contractSet := ContractSet{markets, event, true}
 	//verbose statement
 	fmt.Println("Newly created ContractSet")
 	fmt.Println("Event:", event)
@@ -63,6 +65,7 @@ func (cs ContractSet) PrintState() {
 		cs.Markets[i].P.printOdds()
 		fmt.Println("Contracts in pool: ", cs.Markets[i].P.Contract.Amount)
 		fmt.Println("USD in pool: ", cs.Markets[i].P.Usd)
+		fmt.Println("Make Status:", cs.Made)
 		fmt.Printf("\n")
 	}
 }

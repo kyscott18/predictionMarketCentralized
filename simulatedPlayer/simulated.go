@@ -19,9 +19,9 @@ func NewSimulatedPlayer(id int, balance float32) SimulatedPlayer {
 	return sp
 }
 
-func (sp *SimulatedPlayer) Take(event string, m *markets.Market) {
+func (sp *SimulatedPlayer) Take(cs *markets.ContractSet, m *markets.Market) {
 	//get the ratio of the market
-	ratio := m.getRatioFloat32()
+	ratio := m.GetRatioFloat32()
 
 	//use a bernoulli distribution to predict if we will take or not
 	// bernoulli distribution with p = ratio
@@ -32,11 +32,11 @@ func (sp *SimulatedPlayer) Take(event string, m *markets.Market) {
 	//calculate an amount if you are going to take
 	if take {
 		amount := math.Round(r1.Float64()*10 + 1)
-		fmt.Println("User", sp.mp.Id, "has chosen to buy", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", sp.mp.Id, "has chosen to buy", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 		//buy the contracts if you have funds left
-		sp.mp.BuyContract(event, m, float32(amount))
+		sp.mp.BuyContract(cs, m, float32(amount))
 	} else {
-		fmt.Println("User", sp.mp.Id, "has chosen to buy 0 contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", sp.mp.Id, "has chosen to buy 0 contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 	}
 
 }

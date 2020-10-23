@@ -29,6 +29,9 @@ func (mm MarketMaker) PrintState() {
 }
 
 func (mm *MarketMaker) Make(cs *markets.ContractSet) {
+	if cs.Made == true {
+		return
+	}
 	var totalPrice float64 = 0
 	r := make([]float64, 0)
 	c := make([]float64, 0)
@@ -61,19 +64,23 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 			fmt.Println("MarketMaker bought", amount, "contracts sets from the event", cs.Event, "for $", amount)
 		} else {
 			fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
+			return
 		}
 
 		//sell contracts to individual markets
 		for i := 0; i < len(cs.Markets); i++ {
-			price := cs.Markets[i].SellContract(cs.Event, &mm.profit, &mm.intermediates, amount)
+			price := cs.Markets[i].SellContract(cs, &mm.profit, &mm.intermediates, amount)
 			if price != -1 {
 				fmt.Println("MarketMaker sold", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
 			} else {
 				fmt.Println("Market Maker doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+				return
 			}
 		}
 
 		fmt.Printf("\n")
+
+		cs.Made = true
 
 	} else if totalPrice < 1 {
 		f := func(x float64) float64 {
@@ -93,11 +100,12 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 
 		//buy contracts from indiviual markets
 		for i := 0; i < len(cs.Markets); i++ {
-			price := cs.Markets[i].BuyContract(cs.Event, &mm.profit, &mm.intermediates, amount)
+			price := cs.Markets[i].BuyContract(cs, &mm.profit, &mm.intermediates, amount)
 			if price != -1 {
 				fmt.Println("MarketMaker bought", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
 			} else {
 				fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+				return
 			}
 		}
 
@@ -108,9 +116,11 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 			fmt.Println("MarketMaker sold", amount, "contracts sets from the event", cs.Event, "for $", amount)
 		} else {
 			fmt.Println("MarketMaker doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
+			return
 		}
 
 		fmt.Printf("\n")
 		mm.profit = mm.profit - amount
+		cs.Made = true
 	}
 }

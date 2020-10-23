@@ -12,28 +12,28 @@ type MarketPlayer struct {
 	contracts []markets.Contract
 }
 
-func (mp *MarketPlayer) BuyContract(event string, m *markets.Market, amount float32) {
+func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32) {
 
-	price := m.BuyContract(event, &mp.balance, &mp.contracts, amount)
+	price := m.BuyContract(cs, &mp.balance, &mp.contracts, amount)
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.Id, "bought", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
+		fmt.Println("User", mp.Id, "bought", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", price)
 	} else {
-		fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 	}
 	fmt.Printf("\n")
 }
 
-func (mp *MarketPlayer) SellContract(event string, m *markets.Market, amount float32) {
+func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, amount float32) {
 
-	price := m.SellContract(event, &mp.balance, &mp.contracts, amount)
+	price := m.SellContract(cs, &mp.balance, &mp.contracts, amount)
 
 	//verbose statement
 	if price != -1 {
-		fmt.Println("User", mp.Id, "sold", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition, "for $", price)
+		fmt.Println("User", mp.Id, "sold", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", price)
 	} else {
-		fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts from the event", event, "with the condition", m.P.Contract.Condition)
+		fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 	}
 	fmt.Printf("\n")
 }

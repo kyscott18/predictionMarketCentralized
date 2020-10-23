@@ -6,7 +6,7 @@ import (
 	"example.com/predictionMarketCentralized/cpmm"
 )
 
-func (m *Market) BuyContract(event string, balance *float32, contracts *[]Contract, amount float32) float32 {
+func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *[]Contract, amount float32) float32 {
 	//input = usd, output = contracts
 	price := cpmm.GetOutputPrice(amount, m.P.Usd, m.P.Contract.Amount)
 	//check enough usd to buy
@@ -39,10 +39,12 @@ func (m *Market) BuyContract(event string, balance *float32, contracts *[]Contra
 	}
 	(*contracts)[index].Amount = (*contracts)[index].Amount + amount
 
+	cs.Made = false
+
 	return price
 }
 
-func (m *Market) SellContract(event string, balance *float32, contracts *[]Contract, amount float32) float32 {
+func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *[]Contract, amount float32) float32 {
 	//input = contract, output = usd
 	price := cpmm.GetInputPrice(amount, m.P.Contract.Amount, m.P.Usd)
 
@@ -74,6 +76,8 @@ func (m *Market) SellContract(event string, balance *float32, contracts *[]Contr
 
 	//add usd to user
 	*balance = *balance + price
+
+	cs.Made = false
 
 	return price
 }
@@ -139,6 +143,6 @@ func (cs *ContractSet) SellSet(balance *float32, contracts *[]Contract, amount f
 
 	//add usd to user
 	*balance = *balance + price
-	
+
 	return price
 }
