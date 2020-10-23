@@ -8,10 +8,17 @@ type Contract struct {
 	Amount    float32
 }
 
+//PoolToken represents stake in a liquidity pool
+type PoolToken struct {
+	Condition string
+	Amount    float32
+}
+
 //Pool is a liquidity pool containing contracts and usd
 type Pool struct {
-	Contract Contract
-	Usd      float32
+	Contract  Contract
+	Usd       float32
+	PoolToken PoolToken
 }
 
 //Market is a market for the contract with the condition given
@@ -20,10 +27,12 @@ type Market struct {
 	Condition string
 }
 
+//GetRatioFloat32 get the price of the contract in the market in terms of USD
 func (m Market) GetRatioFloat32() float32 {
 	return m.P.Usd / m.P.Contract.Amount
 }
 
+//GetRatioFloat64 get the price of the contract in the market in terms of USD
 func (m Market) GetRatioFloat64() float64 {
 	return float64(m.P.Usd) / float64(m.P.Contract.Amount)
 }
@@ -40,9 +49,10 @@ type ContractSet struct {
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32) ContractSet {
 	markets := make([]Market, 0)
 	for i := 0; i < len(conditions); i++ {
+		poolToken := PoolToken{conditions[i], numContracts}
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
-		p := Pool{contract, usd}
+		p := Pool{contract, usd, poolToken}
 		markets = append(markets, Market{p, conditions[i]})
 	}
 	contractSet := ContractSet{markets, event, true}
