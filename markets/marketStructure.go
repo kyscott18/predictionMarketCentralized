@@ -2,6 +2,8 @@ package markets
 
 import "fmt"
 
+var MarketCreatorToken []PoolToken
+
 //Contract represents a contract on an event
 type Contract struct {
 	Condition string
@@ -45,17 +47,19 @@ type ContractSet struct {
 	Backing float32
 }
 
-//backing for the contracts comes from a combination of both pools and the backing from the ContractSet
-
 //NewContractSet returns a newly created ContractSet
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32) ContractSet {
+	//TODO: issue pool tokens to the creator of the contract, in this case always a global variable
 	markets := make([]Market, 0)
+	MarketCreatorToken := make([]PoolToken, 0)
 	for i := 0; i < len(conditions); i++ {
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
 		p := Pool{contract, usd, numContracts}
+		MarketCreatorToken = append(MarketCreatorToken, PoolToken{conditions[i], numContracts})
 		markets = append(markets, Market{p, conditions[i]})
 	}
+
 	contractSet := ContractSet{markets, event, true, 0}
 	//verbose statement
 	fmt.Println("Newly created ContractSet")
