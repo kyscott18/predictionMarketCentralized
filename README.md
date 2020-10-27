@@ -3,35 +3,8 @@ Contracts are giving value upon a condition. Contract sets are mutually exclusiv
 1. Allow for the creation of bets, creation of markets for bets and underlying liquidity pools, 
 2. Create market players and swaps
 3. Implement second level market making 
-4. Simulated Participants using the ratios and binomial distributions
-5. Verification of bets and trading in, done by verifying outcome of event
-
-
-class contract {
-    condtion
-    id
-}
-
-class pool {
-    contracts[]
-    usd
-}
-
-class market {
-    pool
-    condition
-}
-
-class ContractSet {
-    markets[]
-    buySet()
-    sellSet()
-}  
-
-class marketPlayer {
-    id
-    balance
-    contracts[]
-    buyContract()
-    sellContract()
-}
+4. Simulated Participants using the ratio between contracts and usd in a pool and bernoulli distributions
+5. Add balance pool to each ContractSet so that we can monitor value
+6. Add pool tokens for each of the pools
+7. Allow for adding contracts to pools and pulling funds from balance pool
+8. Verification of contract outcome and redeeming, done by verifying outcome of event

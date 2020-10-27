@@ -108,6 +108,9 @@ func (cs *ContractSet) BuySet(balance *float32, contracts *[]Contract, amount fl
 		}
 	}
 
+	//add the funds to the backing of the liquidity pool
+	cs.Backing = cs.Backing + price
+
 	return price
 }
 
@@ -143,6 +146,9 @@ func (cs *ContractSet) SellSet(balance *float32, contracts *[]Contract, amount f
 
 	//add usd to user
 	*balance = *balance + price
+
+	//remove backing from set
+	cs.Backing = cs.Backing - price
 
 	return price
 }

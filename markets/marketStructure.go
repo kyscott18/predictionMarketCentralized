@@ -16,9 +16,9 @@ type PoolToken struct {
 
 //Pool is a liquidity pool containing contracts and usd
 type Pool struct {
-	Contract  Contract
-	Usd       float32
-	PoolToken PoolToken
+	Contract      Contract
+	Usd           float32
+	numPoolTokens float32
 }
 
 //Market is a market for the contract with the condition given
@@ -41,21 +41,22 @@ func (m Market) GetRatioFloat64() float64 {
 type ContractSet struct {
 	Markets []Market
 	Event   string
-	//Backing float32
-	Made bool
+	Made    bool
+	Backing float32
 }
+
+//backing for the contracts comes from a combination of both pools and the backing from the ContractSet
 
 //NewContractSet returns a newly created ContractSet
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32) ContractSet {
 	markets := make([]Market, 0)
 	for i := 0; i < len(conditions); i++ {
-		poolToken := PoolToken{conditions[i], numContracts}
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
-		p := Pool{contract, usd, poolToken}
+		p := Pool{contract, usd, numContracts}
 		markets = append(markets, Market{p, conditions[i]})
 	}
-	contractSet := ContractSet{markets, event, true}
+	contractSet := ContractSet{markets, event, true, 0}
 	//verbose statement
 	fmt.Println("Newly created ContractSet")
 	fmt.Println("Event:", event)
@@ -70,12 +71,14 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 func (cs ContractSet) PrintState() {
 	fmt.Println("State of ContractSet")
 	fmt.Println("Event: ", cs.Event)
+	fmt.Println("Make Status:", cs.Made)
+	fmt.Println("Backing:", cs.Backing)
 	for i := 0; i < len(cs.Markets); i++ {
 		fmt.Println("Condition: ", cs.Markets[i].Condition)
 		cs.Markets[i].P.printOdds()
 		fmt.Println("Contracts in pool: ", cs.Markets[i].P.Contract.Amount)
 		fmt.Println("USD in pool: ", cs.Markets[i].P.Usd)
-		fmt.Println("Make Status:", cs.Made)
+
 		fmt.Printf("\n")
 	}
 }
