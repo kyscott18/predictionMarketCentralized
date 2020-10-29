@@ -1,24 +1,20 @@
 package main
 
 import (
-	"example.com/predictionMarketCentralized/maker"
 	"example.com/predictionMarketCentralized/markets"
 	"example.com/predictionMarketCentralized/players"
 )
 
 func main() {
 	cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 20)
-	cs.PrintState()
 	mp1 := players.NewMarketPlayer(1, 10)
-	//mp1.BuySet(&cs, 5)
 	mp1.PrintState()
 	cs.PrintState()
 	mp1.BuyContract(&cs, &cs.Markets[0], 2)
 	mp1.PrintState()
 	cs.PrintState()
-	mm := maker.NewMarketMaker()
-	mm.Make(&cs)
-	mm.PrintState()
+	mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5)
+	mp1.PrintState()
 	cs.PrintState()
 	// mm.Make(&cs)
 	// mm.PrintState()
