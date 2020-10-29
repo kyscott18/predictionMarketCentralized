@@ -82,6 +82,55 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *[]Co
 	return price
 }
 
+func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *[]Contract, tokens *[]PoolToken, amount float32) {
+	price := amount * m.P.Usd / m.P.NumPoolTokens
+	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
+	//check enough balance and contracts
+	index := 0
+	owned := false
+	for i := 0; i < len(*contracts); i++ {
+		if (*contracts)[i].Condition == m.Condition {
+			if (*contracts)[i].Amount < amount {
+				return
+			}
+			index = i
+			owned = true
+			break
+		}
+	}
+	if !owned || *balance < price {
+		return
+	}
+
+	//remove balance and contracts from user
+	*balance = *balance - price
+	(*contracts)[index].Amount = (*contracts)[index].Amount - numContracts
+
+	// add balance and user to pool
+	m.P.Usd = m.P.Usd + price
+	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
+
+	//mint new poolTokens and add to user
+	m.P.NumPoolTokens = m.P.NumPoolTokens + amount
+	alreadyOwn := false
+	for i := 0; i < len(*tokens); i++ {
+		if (*tokens)[i].Condition == m.Condition {
+			index = i
+			alreadyOwn = true
+			break
+		}
+	}
+	if !alreadyOwn {
+		index = len(*tokens)
+		*tokens = append(*tokens, PoolToken{m.P.Contract.Condition, 0})
+	}
+	(*tokens)[index].Amount = (*tokens)[index].Amount + amount
+}
+
+// func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *[]Contract, tokens *[]PoolToken, amount float32) {
+
+// }
+
 func (cs *ContractSet) BuySet(balance *float32, contracts *[]Contract, amount float32) float32 {
 	price := amount
 

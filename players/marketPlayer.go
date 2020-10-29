@@ -62,6 +62,14 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32) {
 	fmt.Printf("\n")
 }
 
+// func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32) {
+
+// }
+
+// func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractsSet, m *markets.Market, amount float32) {
+
+// }
+
 func (mp MarketPlayer) PrintState() {
 	fmt.Println("State of MarketPlayer")
 	fmt.Println("User", mp.Id, "has a balance of", mp.balance)

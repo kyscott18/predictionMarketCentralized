@@ -20,7 +20,7 @@ type PoolToken struct {
 type Pool struct {
 	Contract      Contract
 	Usd           float32
-	numPoolTokens float32
+	NumPoolTokens float32
 }
 
 //Market is a market for the contract with the condition given
@@ -68,6 +68,11 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 	fmt.Println("Ratios:", ratios)
 	fmt.Println("NumContracts", numContracts)
 	fmt.Println()
+
+	// for i := 0; i < len(MarketCreatorToken); i++ {
+	// 	fmt.Println(MarketCreatorToken[i].Amount)
+	// }
+
 	return contractSet
 }
 
@@ -77,6 +82,7 @@ func (cs ContractSet) PrintState() {
 	fmt.Println("Event: ", cs.Event)
 	fmt.Println("Make Status:", cs.Made)
 	fmt.Println("Backing:", cs.Backing)
+
 	for i := 0; i < len(cs.Markets); i++ {
 		fmt.Println("Condition: ", cs.Markets[i].Condition)
 		cs.Markets[i].P.printOdds()
