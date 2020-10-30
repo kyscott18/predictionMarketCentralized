@@ -9,11 +9,11 @@ import (
 
 type MarketMaker struct {
 	profit        float32
-	intermediates []markets.Contract
+	intermediates map[string]markets.Contract
 }
 
 func NewMarketMaker() MarketMaker {
-	mm := MarketMaker{0, make([]markets.Contract, 0)}
+	mm := MarketMaker{0, make(map[string]markets.Contract)}
 	fmt.Println("New MarketMaker")
 	fmt.Println("profit:", 0)
 	fmt.Println("contracts: []")
@@ -35,6 +35,9 @@ func (mm *MarketMaker) Make(cs *markets.ContractSet) {
 	var totalPrice float64 = 0
 	r := make([]float64, 0)
 	c := make([]float64, 0)
+	// for _, m := cs.Markets {
+
+	// }
 	for i := 0; i < len(cs.Markets); i++ {
 		r = append(r, float64(cs.Markets[i].P.Usd))
 		c = append(c, float64(cs.Markets[i].P.Contract.Amount))

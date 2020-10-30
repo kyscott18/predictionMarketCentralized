@@ -9,8 +9,8 @@ import (
 type MarketPlayer struct {
 	Id        int
 	balance   float32
-	contracts []markets.Contract
-	tokens    []markets.PoolToken
+	contracts map[string]markets.Contract
+	tokens    map[string]markets.PoolToken
 }
 
 func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32) {
@@ -75,17 +75,17 @@ func (mp MarketPlayer) PrintState() {
 	fmt.Println("State of MarketPlayer")
 	fmt.Println("User", mp.Id, "has a balance of", mp.balance)
 	fmt.Println("Contracts:")
-	for i := 0; i < len(mp.contracts); i++ {
-		fmt.Println("Contract condition:", mp.contracts[i].Condition, ", amount:", mp.contracts[i].Amount)
+	for _, element := range mp.contracts {
+		fmt.Println("Contract condition:", element.Condition, ", amount:", element.Amount)
 	}
-	for i := 0; i < len(mp.tokens); i++ {
-		fmt.Println("PoolToken condition:", mp.tokens[i].Condition, ", amount:", mp.tokens[i].Amount)
+	for _, element := range mp.tokens {
+		fmt.Println("PoolToken condition:", element.Condition, ", amount:", element.Amount)
 	}
 	fmt.Printf("\n")
 }
 
 func NewMarketPlayer(id int, startingBalance float32) MarketPlayer {
-	mp := MarketPlayer{id, startingBalance, make([]markets.Contract, 0), make([]markets.PoolToken, 0)}
+	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken)}
 	fmt.Println("New MarketPlayer")
 	fmt.Println("id:", id)
 	fmt.Println("startingBalance:", startingBalance)
