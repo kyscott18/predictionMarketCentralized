@@ -20,27 +20,22 @@ func main() {
 	} else {
 		fmt.Println("NotVerbose")
 	}
+	//TODO: add support for controlling verbose output
+
 	if *typePtr == "basic" {
-		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 20)
-		mp1 := players.NewMarketPlayer(1, 10)
-		mp1.PrintState()
-		cs.PrintState()
-		mp1.BuyContract(&cs, &cs.Markets[0], 2)
-		mp1.PrintState()
-		cs.PrintState()
+		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200)
+		mm := maker.NewMarketMaker()
+		mp1 := players.NewMarketPlayer(1, 50)
+		mp1.BuyContract(&cs, &cs.Markets[0], 5)
+		mm.Make(&cs)
 		mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5)
+		mp1.SellContract(&cs, &cs.Markets[0], 2)
+		mm.Make(&cs)
+		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5)
 		mp1.PrintState()
 		cs.PrintState()
-		// mm.Make(&cs)
-		// mm.PrintState()
-		// cs.PrintState()
-		// mp1.SellContract(&cs, &cs.Markets[0], 5)
-		// mp1.PrintState()
-		// cs.PrintState()
-		// mm.Make(&cs)
-		// mm.PrintState()
-		// cs.PrintState()
 	} else if *typePtr == "simulated" {
+		//TODO: add simulation for adding and removing liquidity
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200)
 		mm := maker.NewMarketMaker()
 		bots := make([]simulatedPlayer.SimulatedPlayer, 0)
@@ -56,7 +51,6 @@ func main() {
 			}
 		}
 		mm.PrintState()
-
 		cs.PrintState()
 
 	}
