@@ -25,6 +25,8 @@ func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, 
 			fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
 }
 
@@ -40,8 +42,9 @@ func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market,
 			fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
-
 }
 
 func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) {
@@ -55,8 +58,9 @@ func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) 
 			fmt.Println("User", mp.Id, "doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
-
 }
 
 func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool) {
@@ -70,8 +74,9 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool)
 			fmt.Println("User", mp.Id, "doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
-
 }
 
 func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
@@ -85,8 +90,9 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market,
 			fmt.Println("User", mp.Id, "doesn't have enough contracts or usd receive", amount, "Pool Tokens from the market with the condition", m.Condition)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
-
 }
 
 func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
@@ -100,6 +106,8 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 			fmt.Println("User", mp.Id, "doesn't have enough Pool Tokens to exchange", amount, "Pool Tokens from the market with the condition", m.Condition)
 		}
 		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
 	}
 
 }

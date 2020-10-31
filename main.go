@@ -13,28 +13,26 @@ func main() {
 	typePtr := flag.String("type", "basic", "basic or simulated")
 	verbosePtr := flag.Bool("v", false, "a bool")
 	flag.Parse()
-	//TODO: add support for controlling verbose output
 
 	if *typePtr == "basic" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
 		mm := maker.NewMarketMaker(*verbosePtr)
 		mp1 := players.NewMarketPlayer(1, 50, *verbosePtr)
 		mp1.BuyContract(&cs, &cs.Markets[0], 5, *verbosePtr)
-		mm.PrintState()
-		cs.PrintState()
 		mm.Make(&cs, *verbosePtr)
-		mm.PrintState()
-		cs.PrintState()
+		if *verbosePtr {
+			mm.PrintState()
+		}
 		mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
 		mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
-		mm.PrintState()
-		cs.PrintState()
 		mm.Make(&cs, *verbosePtr)
-		mm.PrintState()
-		cs.PrintState()
+		if *verbosePtr {
+			mm.PrintState()
+		}
 		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
 	} else if *typePtr == "simulated" {
 		//TODO: add simulation for adding and removing liquidity
+		//TODO: add support for controlling verbose output
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
 		mm := maker.NewMarketMaker(*verbosePtr)
 		bots := make([]simulatedPlayer.SimulatedPlayer, 0)
