@@ -30,6 +30,10 @@ func main() {
 			mm.PrintState()
 		}
 		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		if !(*verbosePtr) {
+			mp1.PrintState()
+			cs.PrintState()
+		}
 	} else if *typePtr == "simulated" {
 		//TODO: add simulation for adding and removing liquidity
 		//TODO: add support for controlling verbose output
@@ -41,7 +45,7 @@ func main() {
 		}
 		for round := 0; round < 800; round++ {
 			for i := 0; i < 100; i++ {
-				for j := 0; j < len(cs.Markets); j++ {
+				for j := range cs.Markets {
 					bots[i].Take(&cs, &cs.Markets[j], *verbosePtr)
 					mm.Make(&cs, *verbosePtr)
 				}

@@ -23,7 +23,6 @@ func (sp *SimulatedPlayer) Take(cs *markets.ContractSet, m *markets.Market, v bo
 	//get the ratio of the market
 	ratio := m.GetRatioFloat32()
 
-	//use a bernoulli distribution to predict if we will take or not
 	// bernoulli distribution with p = ratio
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
@@ -39,4 +38,8 @@ func (sp *SimulatedPlayer) Take(cs *markets.ContractSet, m *markets.Market, v bo
 		fmt.Println("User", sp.mp.Id, "has chosen to buy 0 contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 	}
 
+}
+
+func (sp *SimulatedPlayer) Provide(cs *markets.ContractSet, m *markets.Market, v bool) {
+	return
 }
