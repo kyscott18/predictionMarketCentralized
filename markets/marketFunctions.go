@@ -58,15 +58,15 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	return price
 }
 
-func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) {
+func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) (float32, float32) {
 	price := amount * m.P.Usd / m.P.NumPoolTokens
 	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
 	//check enough balance and contracts
 	_, ok := (*contracts)[m.Condition]
 	if !ok || *balance < price {
-		return
+		return -1, -1
 	} else if (*contracts)[m.Condition].Amount < amount {
-		return
+		return -1, -1
 	}
 
 	//remove balance and contracts from user
@@ -80,17 +80,19 @@ func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[
 	//mint new poolTokens and add to user
 	m.P.NumPoolTokens = m.P.NumPoolTokens + amount
 	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount + amount}
+
+	return price, numContracts
 }
 
-func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) {
+func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) (float32, float32) {
 	price := amount * m.P.Usd / m.P.NumPoolTokens
 	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
 	//check enough pool tokens
 	_, ok := (*tokens)[m.Condition]
 	if !ok {
-		return
+		return -1, -1
 	} else if (*tokens)[m.Condition].Amount < amount {
-		return
+		return -1, -1
 	}
 
 	//remove balance and contacts from pool
@@ -104,6 +106,8 @@ func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *m
 	//remove pool tokens from user and burn them
 	m.P.NumPoolTokens = m.P.NumPoolTokens - amount
 	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount - amount}
+
+	return price, numContracts
 }
 
 func (cs *ContractSet) BuySet(balance *float32, contracts *map[string]Contract, amount float32) float32 {

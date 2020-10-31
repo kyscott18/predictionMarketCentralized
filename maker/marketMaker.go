@@ -12,12 +12,14 @@ type MarketMaker struct {
 	intermediates map[string]markets.Contract
 }
 
-func NewMarketMaker() MarketMaker {
+func NewMarketMaker(v bool) MarketMaker {
 	mm := MarketMaker{0, make(map[string]markets.Contract)}
-	fmt.Println("New MarketMaker")
-	fmt.Println("profit:", 0)
-	fmt.Println("contracts: []")
-	fmt.Println()
+	if v {
+		fmt.Println("New MarketMaker")
+		fmt.Println("profit:", 0)
+		fmt.Println("contracts: []")
+		fmt.Println()
+	}
 	return mm
 }
 
@@ -28,102 +30,92 @@ func (mm MarketMaker) PrintState() {
 	fmt.Println()
 }
 
-func (mm *MarketMaker) Make(cs *markets.ContractSet) {
+func (mm *MarketMaker) Make(cs *markets.ContractSet, v bool) {
 	if cs.Made == true {
 		return
 	}
-	var totalPrice float64 = 0
-	r := make([]float64, 0)
-	c := make([]float64, 0)
-	// for _, m := cs.Markets {
 
-	// }
-	for i := 0; i < len(cs.Markets); i++ {
-		r = append(r, float64(cs.Markets[i].P.Usd))
-		c = append(c, float64(cs.Markets[i].P.Contract.Amount))
-		totalPrice = totalPrice + cs.Markets[i].GetRatioFloat64()
+	f := func(x float64) float64 {
+		var eq float64 = -1
+		for _, m := range cs.Markets {
+			r := float64(m.P.Usd)
+			c := float64(m.P.Contract.Amount)
+			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
+		}
+		return eq
 	}
 
-	if totalPrice > 1 {
-		f := func(x float64) float64 {
-			var eq float64 = -1
-			for i := 0; i < len(cs.Markets); i++ {
-				eq = eq + ((r[i] - (r[i]*x)/(c[i]+x)) / (c[i] + x))
-			}
-			return eq
-		}
-		//TODO: find a quick algorithm for initial guess
-		initialGuess := 3.0
-		iter := 7
+	var totalPrice float64 = 0
+	for _, m := range cs.Markets {
+		totalPrice = totalPrice + m.GetRatioFloat64()
+	}
 
-		result, _ := root.Newton(f, initialGuess, iter)
-		amount := float32(result)
+	//TODO: find a quick algorithm for initial guess
+	initialGuess := totalPrice
+	iter := 7
+
+	result, _ := root.Newton(f, initialGuess, iter)
+	amount := float32(result)
+
+	if amount > 0 {
 		mm.profit = mm.profit + amount
-
 		//buy contracts as a set
 		success := cs.BuySet(&mm.profit, &mm.intermediates, amount)
-		mm.profit = mm.profit - amount
-		if success != -1 {
-			fmt.Println("MarketMaker bought", amount, "contracts sets from the event", cs.Event, "for $", amount)
-		} else {
-			fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
-			return
+		if v {
+			if success != -1 {
+				fmt.Println("MarketMaker bought", amount, "contracts sets from the event", cs.Event, "for $", amount)
+			} else {
+				fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
+				return
+			}
 		}
 
 		//sell contracts to individual markets
-		for i := 0; i < len(cs.Markets); i++ {
+		for i := range cs.Markets {
 			price := cs.Markets[i].SellContract(cs, &mm.profit, &mm.intermediates, amount)
-			if price != -1 {
-				fmt.Println("MarketMaker sold", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
-			} else {
-				fmt.Println("Market Maker doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
-				return
+			if v {
+				if price != -1 {
+					fmt.Println("MarketMaker sold", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
+				} else {
+					fmt.Println("Market Maker doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+					return
+				}
 			}
 		}
 
-		fmt.Printf("\n")
-
-		cs.Made = true
-
-	} else if totalPrice < 1 {
-		f := func(x float64) float64 {
-			var eq float64 = -1
-			for i := 0; i < len(cs.Markets); i++ {
-				eq = eq + ((r[i] + (r[i]*x)/(c[i]+x)) / (c[i] - x))
-			}
-			return eq
-		}
-		//TODO: find a quick algorithm for initial guess
-		initialGuess := 3.0
-		iter := 7
-
-		result, _ := root.Newton(f, initialGuess, iter)
-		amount := float32(result)
+	} else if amount < 0 {
+		amount = amount * -1
 		mm.profit = mm.profit + amount
-
 		//buy contracts from indiviual markets
-		for i := 0; i < len(cs.Markets); i++ {
+		for i := range cs.Markets {
+			// fmt.Println(cs.Markets[i].Condition)
+			// fmt.Println(mm.profit)
 			price := cs.Markets[i].BuyContract(cs, &mm.profit, &mm.intermediates, amount)
-			if price != -1 {
-				fmt.Println("MarketMaker bought", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
-			} else {
-				fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
-				return
+			if v {
+				if price != -1 {
+					fmt.Println("MarketMaker bought", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
+				} else {
+					fmt.Println("MarketMaker doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+					return
+				}
 			}
 		}
 
 		//Sell contracts as a set
 		success := cs.SellSet(&mm.profit, &mm.intermediates, amount)
 		//verbose statement
-		if success != -1 {
-			fmt.Println("MarketMaker sold", amount, "contracts sets from the event", cs.Event, "for $", amount)
-		} else {
-			fmt.Println("MarketMaker doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
-			return
+		if v {
+			if success != -1 {
+				fmt.Println("MarketMaker sold", amount, "contracts sets from the event", cs.Event, "for $", amount)
+			} else {
+				fmt.Println("MarketMaker doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
+				return
+			}
 		}
-
-		fmt.Printf("\n")
-		mm.profit = mm.profit - amount
-		cs.Made = true
 	}
+	if v {
+		fmt.Println()
+	}
+	mm.profit = mm.profit - amount
+	cs.Made = true
 }
