@@ -10,7 +10,7 @@ type MarketPlayer struct {
 	Id        int
 	balance   float32
 	contracts map[string]markets.Contract
-	tokens    map[string]markets.PoolToken
+	Tokens    map[string]markets.PoolToken
 }
 
 func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
@@ -80,7 +80,7 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool)
 }
 
 func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.AddLiquidity(cs, &mp.balance, &mp.contracts, &mp.tokens, amount)
+	price, numContacts := m.AddLiquidity(cs, &mp.balance, &mp.contracts, &mp.Tokens, amount)
 
 	//verbose statement
 	if v {
@@ -96,7 +96,7 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market,
 }
 
 func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.RemoveLiquidity(cs, &mp.balance, &mp.contracts, &mp.tokens, amount)
+	price, numContacts := m.RemoveLiquidity(cs, &mp.balance, &mp.contracts, &mp.Tokens, amount)
 
 	//verbose statement
 	if v {
@@ -119,7 +119,7 @@ func (mp MarketPlayer) PrintState() {
 	for _, element := range mp.contracts {
 		fmt.Println("Contract condition:", element.Condition, ", amount:", element.Amount)
 	}
-	for _, element := range mp.tokens {
+	for _, element := range mp.Tokens {
 		fmt.Println("PoolToken condition:", element.Condition, ", amount:", element.Amount)
 	}
 	fmt.Printf("\n")

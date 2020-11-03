@@ -46,11 +46,17 @@ func main() {
 		for round := 0; round < 800; round++ {
 			for i := range bots {
 				for j := range cs.Markets {
-					bots[i].Buy(&cs, &cs.Markets[j], *verbosePtr)
+					bots[i].BuyOrSell(&cs, &cs.Markets[j], *verbosePtr)
 					mm.Make(&cs, *verbosePtr)
-					//bots[i].Sell(&cs, &cs.Markets[j], *verbosePtr)
+					bots[i].AddOrRemove(&cs, &cs.Markets[j], *verbosePtr)
 					//mm.Make(&cs, *verbosePtr)
 				}
+			}
+		}
+		//remove all liquidity
+		for i := range bots {
+			for j := range cs.Markets {
+				bots[i].RemoveAll(&cs, &cs.Markets[j], *verbosePtr)
 			}
 		}
 		mm.PrintState()
