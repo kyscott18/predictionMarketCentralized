@@ -112,6 +112,21 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 
 }
 
+func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v bool) {
+	price := m.Redeem(cs, &mp.balance, &mp.contracts)
+
+	if v {
+		if price == -1 {
+			fmt.Println("event was not decided yet")
+		} else {
+			fmt.Println("User", mp.Id, "redeemed", price, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
+		}
+		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
+	}
+}
+
 func (mp MarketPlayer) PrintState() {
 	fmt.Println("State of MarketPlayer")
 	fmt.Println("User", mp.Id, "has a balance of", mp.balance)

@@ -1,6 +1,8 @@
 package markets
 
 import (
+	"fmt"
+
 	"example.com/predictionMarketCentralized/cpmm"
 )
 
@@ -108,6 +110,27 @@ func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *m
 	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount - amount}
 
 	return price, numContracts
+}
+
+func (m *Market) Redeem(cs *ContractSet, balance *float32, contracts *map[string]Contract) float32 {
+	//exchange contracts for value if the event has been decided
+	if cs.Outcome == "none" {
+		fmt.Println("Event", cs.Event, "has not been decided yet")
+		return -1
+	} else if cs.Outcome == m.Condition {
+		_, ok := (*contracts)[m.Condition]
+		if !ok {
+			return 0
+		}
+		amount := (*contracts)[m.Condition].Amount
+		*balance = *balance + (*contracts)[m.Condition].Amount
+		(*contracts)[m.Condition] = Contract{m.Condition, 0}
+		return amount
+	} else {
+		//burn contracts
+		(*contracts)[m.Condition] = Contract{m.Condition, 0}
+		return 0
+	}
 }
 
 func (cs *ContractSet) BuySet(balance *float32, contracts *map[string]Contract, amount float32) float32 {

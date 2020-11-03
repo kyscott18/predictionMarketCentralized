@@ -45,6 +45,7 @@ type ContractSet struct {
 	Event   string
 	Made    bool
 	Backing float32
+	Outcome string
 }
 
 //NewContractSet returns a newly created ContractSet
@@ -59,7 +60,7 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 		markets = append(markets, Market{p, conditions[i]})
 	}
 
-	contractSet := ContractSet{markets, event, true, 0}
+	contractSet := ContractSet{markets, event, true, 0, "none"}
 	//verbose statement
 	if v {
 		fmt.Println("Newly created ContractSet")
@@ -88,6 +89,10 @@ func (cs ContractSet) PrintState() {
 
 		fmt.Printf("\n")
 	}
+}
+
+func (cs *ContractSet) Validate(m Market) {
+	cs.Outcome = m.Condition
 }
 
 func (p Pool) printOdds() {
