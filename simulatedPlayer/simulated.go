@@ -19,7 +19,7 @@ func NewSimulatedPlayer(id int, balance float32, v bool) SimulatedPlayer {
 	return sp
 }
 
-func (sp *SimulatedPlayer) Take(cs *markets.ContractSet, m *markets.Market, v bool) {
+func (sp *SimulatedPlayer) Buy(cs *markets.ContractSet, m *markets.Market, v bool) {
 	//get the ratio of the market
 	ratio := m.GetRatioFloat32()
 
@@ -40,6 +40,14 @@ func (sp *SimulatedPlayer) Take(cs *markets.ContractSet, m *markets.Market, v bo
 
 }
 
-func (sp *SimulatedPlayer) Provide(cs *markets.ContractSet, m *markets.Market, v bool) {
+func (sp *SimulatedPlayer) Sell(cs *markets.ContractSet, m *markets.Market, v bool) {
+	return
+}
+
+func (sp *SimulatedPlayer) Add(cs *markets.ContractSet, m *markets.Market, v bool) {
+	return
+}
+
+func (sp *SimulatedPlayer) Remove(cs *markets.ContractSet, m *markets.Market, v bool) {
 	return
 }

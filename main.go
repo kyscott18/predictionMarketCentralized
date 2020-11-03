@@ -44,10 +44,12 @@ func main() {
 			bots = append(bots, simulatedPlayer.NewSimulatedPlayer(i, 70, *verbosePtr))
 		}
 		for round := 0; round < 800; round++ {
-			for i := 0; i < 100; i++ {
+			for i := range bots {
 				for j := range cs.Markets {
-					bots[i].Take(&cs, &cs.Markets[j], *verbosePtr)
+					bots[i].Buy(&cs, &cs.Markets[j], *verbosePtr)
 					mm.Make(&cs, *verbosePtr)
+					//bots[i].Sell(&cs, &cs.Markets[j], *verbosePtr)
+					//mm.Make(&cs, *verbosePtr)
 				}
 			}
 		}
