@@ -8,14 +8,14 @@ import (
 
 type MarketPlayer struct {
 	Id        int
-	balance   float32
+	Balance   float32
 	contracts map[string]markets.Contract
 	Tokens    map[string]markets.PoolToken
 }
 
 func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
 
-	price := m.BuyContract(cs, &mp.balance, &mp.contracts, amount)
+	price := m.BuyContract(cs, &mp.Balance, &mp.contracts, amount)
 
 	//verbose statement
 	if v {
@@ -32,7 +32,7 @@ func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, 
 
 func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
 
-	price := m.SellContract(cs, &mp.balance, &mp.contracts, amount)
+	price := m.SellContract(cs, &mp.Balance, &mp.contracts, amount)
 
 	//verbose statement
 	if v {
@@ -48,7 +48,7 @@ func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market,
 }
 
 func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) {
-	price := cs.BuySet(&mp.balance, &mp.contracts, amount)
+	price := cs.BuySet(&mp.Balance, &mp.contracts, amount)
 
 	//verbose statement
 	if v {
@@ -64,7 +64,7 @@ func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) 
 }
 
 func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool) {
-	price := cs.SellSet(&mp.balance, &mp.contracts, amount)
+	price := cs.SellSet(&mp.Balance, &mp.contracts, amount)
 
 	//verbose statement
 	if v {
@@ -80,7 +80,7 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool)
 }
 
 func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.AddLiquidity(cs, &mp.balance, &mp.contracts, &mp.Tokens, amount)
+	price, numContacts := m.AddLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, amount)
 
 	//verbose statement
 	if v {
@@ -96,7 +96,7 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market,
 }
 
 func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.RemoveLiquidity(cs, &mp.balance, &mp.contracts, &mp.Tokens, amount)
+	price, numContacts := m.RemoveLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, amount)
 
 	//verbose statement
 	if v {
@@ -113,7 +113,7 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 }
 
 func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v bool) {
-	price := m.Redeem(cs, &mp.balance, &mp.contracts)
+	price := m.Redeem(cs, &mp.Balance, &mp.contracts)
 
 	if v {
 		if price == -1 {
@@ -129,7 +129,7 @@ func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v boo
 
 func (mp MarketPlayer) PrintState() {
 	fmt.Println("State of MarketPlayer")
-	fmt.Println("User", mp.Id, "has a balance of", mp.balance)
+	fmt.Println("User", mp.Id, "has a balance of", mp.Balance)
 	fmt.Println("Contracts:")
 	for _, element := range mp.contracts {
 		fmt.Println("Contract condition:", element.Condition, ", amount:", element.Amount)

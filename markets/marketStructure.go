@@ -91,8 +91,11 @@ func (cs ContractSet) PrintState() {
 	}
 }
 
-func (cs *ContractSet) Validate(m Market) {
+func (cs *ContractSet) Validate(m Market, v bool) {
 	cs.Outcome = m.Condition
+	if v {
+		fmt.Println("Outcome for the event", cs.Event, "has been determined to be", m.Condition)
+	}
 }
 
 func (p Pool) printOdds() {

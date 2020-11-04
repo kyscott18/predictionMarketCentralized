@@ -8,3 +8,8 @@ Contracts are giving value 1 upon a condition. Contract sets are mutually exclus
 6. Add pool tokens for each of the pools
 7. Allow for adding contracts to pools and pulling funds from balance pool
 8. Verification of contract outcome and redeeming, done by verifying outcome of event
+
+#TODO:
+Allow for single sided liquidity providing
+Track all funds in the poll along with the gains and loses of all users
+Integrate redeeming into basic and simulated main programs

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"example.com/predictionMarketCentralized/maker"
 	"example.com/predictionMarketCentralized/markets"
@@ -30,12 +31,13 @@ func main() {
 			mm.PrintState()
 		}
 		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		cs.Validate(cs.Markets[0], *verbosePtr)
+		mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
 		if !(*verbosePtr) {
 			mp1.PrintState()
 			cs.PrintState()
 		}
 	} else if *typePtr == "simulated" {
-		//TODO: add simulation for adding and removing liquidity
 		//TODO: add support for controlling verbose output
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
 		mm := maker.NewMarketMaker(*verbosePtr)
@@ -49,7 +51,6 @@ func main() {
 					bots[i].BuyOrSell(&cs, &cs.Markets[j], *verbosePtr)
 					mm.Make(&cs, *verbosePtr)
 					bots[i].AddOrRemove(&cs, &cs.Markets[j], *verbosePtr)
-					//mm.Make(&cs, *verbosePtr)
 				}
 			}
 		}
@@ -59,6 +60,20 @@ func main() {
 				bots[i].RemoveAll(&cs, &cs.Markets[j], *verbosePtr)
 			}
 		}
+
+		//validate the outcome that is above .97 percent
+		simulatedPlayer.SimulateValidation(&cs)
+		//redeem all votes
+		for i := range bots {
+			for j := range cs.Markets {
+				bots[i].Redeem(&cs, &cs.Markets[j], *verbosePtr)
+			}
+		}
+
+		//print total player money
+		fmt.Println("Total player money:", simulatedPlayer.SumPlayersBalance(bots))
+		fmt.Println()
+
 		mm.PrintState()
 		cs.PrintState()
 
