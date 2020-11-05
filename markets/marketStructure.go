@@ -16,6 +16,11 @@ type PoolToken struct {
 	Amount    float32
 }
 
+type PoolTokenSS struct {
+	Condition string
+	Amount    float32
+}
+
 //Pool is a liquidity pool containing contracts and usd
 type Pool struct {
 	Contract      Contract

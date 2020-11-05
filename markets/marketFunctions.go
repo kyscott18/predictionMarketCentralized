@@ -112,6 +112,38 @@ func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *m
 	return price, numContracts
 }
 
+func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, amount float32) float32 {
+	price := amount * m.P.Usd / m.P.NumPoolTokens
+	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
+	//check enough balance and contracts
+	_, ok := (*contracts)[m.Condition]
+	if !ok || cs.Backing < price {
+		return -1
+	} else if (*contracts)[m.Condition].Amount < amount {
+		return -1
+	}
+
+	//remove reserve from backing
+	cs.Backing = cs.Backing - price
+
+	//remove contracts from user
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
+
+	// add balance and user to pool
+	m.P.Usd = m.P.Usd + price
+	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
+
+	//mint new poolTokens and add to user
+	m.P.NumPoolTokens = m.P.NumPoolTokens + amount
+	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount + amount}
+
+	return numContracts
+}
+
+func (m *Market) RemoveLiquiditySS(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, amount float32) {
+	return
+}
+
 func (m *Market) Redeem(cs *ContractSet, balance *float32, contracts *map[string]Contract) float32 {
 	//exchange contracts for value if the event has been decided
 	if cs.Outcome == "none" {

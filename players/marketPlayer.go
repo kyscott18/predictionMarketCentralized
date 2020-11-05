@@ -11,6 +11,7 @@ type MarketPlayer struct {
 	Balance   float32
 	contracts map[string]markets.Contract
 	Tokens    map[string]markets.PoolToken
+	TokensSS  map[string]markets.PoolTokenSS
 }
 
 func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
@@ -87,7 +88,7 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market,
 		if price != -1 {
 			fmt.Println("User", mp.Id, "provided", numContacts, "contracts and", price, "usd in exchange for", amount, "Pool Tokens from the market with the condition", m.Condition)
 		} else {
-			fmt.Println("User", mp.Id, "doesn't have enough contracts or usd receive", amount, "Pool Tokens from the market with the condition", m.Condition)
+			fmt.Println("User", mp.Id, "doesn't have enough contracts or usd to receive", amount, "Pool Tokens from the market with the condition", m.Condition)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -110,6 +111,22 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 		cs.PrintState()
 	}
 
+}
+
+func (mp *MarketPlayer) AddLiquiditySS(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
+	numContracts := m.AddLiquiditySS(cs, &mp.contracts, &mp.TokensSS, amount)
+
+	//verbose statement
+	if v {
+		if numContracts != -1 {
+			fmt.Println("User", mp.Id, "provided", numContracts, "contracts in exchange for", amount, "single sided Pool Tokens from the market with the condition", m.Condition)
+		} else {
+			fmt.Println("User", mp.Id, "doesn't have enough contracts to receive", amount, "single sided Pool Tokens from the market with the condition", m.Condition)
+		}
+		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
+	}
 }
 
 func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v bool) {
@@ -137,16 +154,18 @@ func (mp MarketPlayer) PrintState() {
 	for _, element := range mp.Tokens {
 		fmt.Println("PoolToken condition:", element.Condition, ", amount:", element.Amount)
 	}
+	for _, element := range mp.TokensSS {
+		fmt.Println("PoolTokenSS condition:", element.Condition, ", amount:", element.Amount)
+	}
 	fmt.Printf("\n")
 }
 
 func NewMarketPlayer(id int, startingBalance float32, v bool) MarketPlayer {
-	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken)}
+	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken), make(map[string]markets.PoolTokenSS)}
 	if v {
 		fmt.Println("New MarketPlayer")
 		fmt.Println("id:", id)
 		fmt.Println("startingBalance:", startingBalance)
-		fmt.Println("contracts: []")
 		fmt.Println()
 	}
 
