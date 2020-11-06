@@ -141,6 +141,13 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 }
 
 func (m *Market) RemoveLiquiditySS(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, amount float32) {
+	// must keep enough backing in the system to be able to redeem all the contracts
+	// ratio has shifted more towards contracts
+	// token is worth more contracts and less reserve than when it was minted
+	//
+	// ratio has shifted more towards reserve
+	// token is worth less contracts and more reserve than when it was minted
+
 	return
 }
 
