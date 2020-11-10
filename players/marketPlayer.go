@@ -129,6 +129,22 @@ func (mp *MarketPlayer) AddLiquiditySS(cs *markets.ContractSet, m *markets.Marke
 	}
 }
 
+func (mp *MarketPlayer) RemoveLiquiditySS(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
+	numContracts := m.RemoveLiquiditySS(cs, &mp.contracts, &mp.TokensSS, amount)
+
+	//verbose statement
+	if v {
+		if numContracts != -1 {
+			fmt.Println("User", mp.Id, "exchanged", amount, "single sided Pool Tokens for", numContracts, "contracts from the market with the condition", m.Condition)
+		} else {
+			fmt.Println("User", mp.Id, "doesn't have enough single sided Pool Tokens to exchange", amount, "Pool Tokens from the market with the condition", m.Condition)
+		}
+		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
+	}
+}
+
 func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v bool) {
 	price := m.Redeem(cs, &mp.Balance, &mp.contracts)
 

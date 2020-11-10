@@ -23,14 +23,16 @@ func main() {
 		mm.Make(&cs, *verbosePtr)
 		if *verbosePtr {
 			mm.PrintState()
+			cs.PrintState()
 		}
-		mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		mp1.AddLiquiditySS(&cs, &cs.Markets[0], 1.5, *verbosePtr)
 		mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
 		mm.Make(&cs, *verbosePtr)
 		if *verbosePtr {
 			mm.PrintState()
+			cs.PrintState()
 		}
-		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		mp1.RemoveLiquiditySS(&cs, &cs.Markets[0], 1.5, *verbosePtr)
 		cs.Validate(cs.Markets[0], *verbosePtr)
 		mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
 		if !(*verbosePtr) {

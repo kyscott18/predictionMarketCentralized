@@ -118,6 +118,7 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 	//check enough balance and contracts
 	_, ok := (*contracts)[m.Condition]
 	if !ok || cs.Backing < price {
+		fmt.Println("FUCK")
 		return -1
 	} else if (*contracts)[m.Condition].Amount < amount {
 		return -1
@@ -134,21 +135,49 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
 
 	//mint new poolTokens and add to user
-	m.P.NumPoolTokens = m.P.NumPoolTokens + amount
+	m.P.NumSSPoolTokens = m.P.NumSSPoolTokens + amount
 	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount + amount}
 
 	return numContracts
 }
 
-func (m *Market) RemoveLiquiditySS(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, amount float32) {
+func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, amount float32) float32 {
+
 	// must keep enough backing in the system to be able to redeem all the contracts
+
 	// ratio has shifted more towards contracts
 	// token is worth more contracts and less reserve than when it was minted
 	//
+
 	// ratio has shifted more towards reserve
 	// token is worth less contracts and more reserve than when it was minted
+	//
 
-	return
+	price := amount * m.P.Usd / m.P.NumPoolTokens
+	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
+	//check enough pool tokens
+	_, ok := (*tokens)[m.Condition]
+	if !ok {
+		return -1
+	} else if (*tokens)[m.Condition].Amount < amount {
+		return -1
+	}
+
+	//remove balance and contacts from pool
+	m.P.Usd = m.P.Usd - price
+	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
+
+	//add balance to reserve
+	cs.Backing = cs.Backing + price
+
+	//add contracts to user
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+
+	//remove pool tokens from user and burn them
+	m.P.NumSSPoolTokens = m.P.NumSSPoolTokens - amount
+	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount - amount}
+
+	return numContracts
 }
 
 func (m *Market) Redeem(cs *ContractSet, balance *float32, contracts *map[string]Contract) float32 {

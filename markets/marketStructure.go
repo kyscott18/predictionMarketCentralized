@@ -23,9 +23,10 @@ type PoolTokenSS struct {
 
 //Pool is a liquidity pool containing contracts and usd
 type Pool struct {
-	Contract      Contract
-	Usd           float32
-	NumPoolTokens float32
+	Contract        Contract
+	Usd             float32
+	NumPoolTokens   float32
+	NumSSPoolTokens float32
 }
 
 //Market is a market for the contract with the condition given
@@ -60,7 +61,7 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 	for i := 0; i < len(conditions); i++ {
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
-		p := Pool{contract, usd, numContracts}
+		p := Pool{contract, usd, numContracts, 0}
 		MarketCreatorToken[conditions[i]] = PoolToken{conditions[i], MarketCreatorToken[conditions[i]].Amount + numContracts}
 		markets = append(markets, Market{p, conditions[i]})
 	}
