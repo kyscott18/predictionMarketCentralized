@@ -2,49 +2,45 @@ package markets
 
 import "fmt"
 
+// MarketCreatorToken is the PoolTokens that are held by the creator of the market
 var MarketCreatorToken map[string]PoolToken
 
-//Contract represents a contract on an event
+// Contract is the type that represents a contract for an event
 type Contract struct {
 	Condition string
 	Amount    float32
 }
 
-//PoolToken represents stake in a liquidity pool
+// PoolToken is the type that represents stake in a liquidity pool
 type PoolToken struct {
 	Condition string
 	Amount    float32
 }
 
-type PoolTokenSS struct {
-	Condition string
-	Amount    float32
-}
-
-//Pool is a liquidity pool containing contracts and usd
+// Pool is the type that represents a liquidity pool containing contracts and usd
 type Pool struct {
 	Contract      Contract
 	Usd           float32
 	NumPoolTokens float32
 }
 
-//Market is a market for the contract with the condition given
+// Market is the type that represents a market for the contract with the condition given
 type Market struct {
 	P         Pool
 	Condition string
 }
 
-//GetRatioFloat32 get the price of the contract in the market in terms of USD
+// GetRatioFloat32 gets the price of the contract in the market in terms of reserve
 func (m Market) GetRatioFloat32() float32 {
 	return m.P.Usd / m.P.Contract.Amount
 }
 
-//GetRatioFloat64 get the price of the contract in the market in terms of USD
+// GetRatioFloat64 get the price of the contract in the market in terms of reserve
 func (m Market) GetRatioFloat64() float64 {
 	return float64(m.P.Usd) / float64(m.P.Contract.Amount)
 }
 
-//ContractSet is the set of markets representing an event
+// ContractSet is the type that represents an event and corresponding set of markets
 type ContractSet struct {
 	Markets []Market
 	Event   string
@@ -53,7 +49,7 @@ type ContractSet struct {
 	Outcome string
 }
 
-//NewContractSet returns a newly created ContractSet
+// NewContractSet creates a new contract set
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32, v bool) ContractSet {
 	markets := make([]Market, 0)
 	MarketCreatorToken := make(map[string]PoolToken)
@@ -79,7 +75,7 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 	return contractSet
 }
 
-//PrintState prints the state of the ContractSet
+// PrintState prints the current state of the ContractSet
 func (cs ContractSet) PrintState() {
 	fmt.Println("State of ContractSet")
 	fmt.Println("Event: ", cs.Event)
@@ -96,6 +92,7 @@ func (cs ContractSet) PrintState() {
 	}
 }
 
+// Validate determines the outcome for a ContractSet
 func (cs *ContractSet) Validate(m Market, v bool) {
 	cs.Outcome = m.Condition
 	if v {
@@ -103,6 +100,7 @@ func (cs *ContractSet) Validate(m Market, v bool) {
 	}
 }
 
+// printOdds prints the odds for a contract in several forms
 func (p Pool) printOdds() {
 	ratio := float32(p.Contract.Amount) / p.Usd
 	fmt.Println("American odds: ", ratioToAmerican(ratio))
@@ -110,6 +108,7 @@ func (p Pool) printOdds() {
 	fmt.Println("Decimal odds: ", ratio)
 }
 
+// ratioToAmerican converts the ratio of contracts and reserve to american odds
 func ratioToAmerican(ratio float32) float32 {
 	ratio = ratio - 1
 	if ratio < .5 {

@@ -7,11 +7,13 @@ import (
 	"github.com/DzananGanic/numericalgo/root"
 )
 
+// MarketMaker is a type that represents a designated market maker
 type MarketMaker struct {
 	profit        float32
 	intermediates map[string]markets.Contract
 }
 
+// NewMarketMaker creates a market maker
 func NewMarketMaker(v bool) MarketMaker {
 	mm := MarketMaker{0, make(map[string]markets.Contract)}
 	if v {
@@ -23,6 +25,7 @@ func NewMarketMaker(v bool) MarketMaker {
 	return mm
 }
 
+// PrintState prints the current state of the market maker
 func (mm MarketMaker) PrintState() {
 	fmt.Println("State of MarketMaker")
 	fmt.Println("profit:", mm.profit)
@@ -30,6 +33,7 @@ func (mm MarketMaker) PrintState() {
 	fmt.Println()
 }
 
+// Make is the market maker function of balancing the market
 func (mm *MarketMaker) Make(cs *markets.ContractSet, v bool) {
 	if cs.Made == true {
 		return

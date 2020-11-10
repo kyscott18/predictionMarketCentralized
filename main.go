@@ -38,27 +38,42 @@ func main() {
 			cs.PrintState()
 		}
 	} else if *typePtr == "simulated" {
-		//TODO: add support for controlling verbose output
-		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
-		mm := maker.NewMarketMaker(*verbosePtr)
+		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, false)
+		mm := maker.NewMarketMaker(false)
 		bots := make([]simulatedPlayer.SimulatedPlayer, 0)
+		if *verbosePtr {
+			fmt.Println("Creating 100 simulated players")
+			fmt.Println()
+		}
 		for i := 0; i < 100; i++ {
-			bots = append(bots, simulatedPlayer.NewSimulatedPlayer(i, 70, *verbosePtr))
+			bots = append(bots, simulatedPlayer.NewSimulatedPlayer(i, 70, false))
+		}
+		if *verbosePtr {
+			fmt.Println("Simulating trading")
+			fmt.Println()
 		}
 		for round := 0; round < 800; round++ {
 			for i := range bots {
 				for j := range cs.Markets {
-					bots[i].BuyOrSell(&cs, &cs.Markets[j], *verbosePtr)
-					mm.Make(&cs, *verbosePtr)
-					bots[i].AddOrRemove(&cs, &cs.Markets[j], *verbosePtr)
+					bots[i].BuyOrSell(&cs, &cs.Markets[j], false)
+					mm.Make(&cs, false)
+					bots[i].AddOrRemove(&cs, &cs.Markets[j], false)
 				}
 			}
+		}
+		if *verbosePtr {
+			fmt.Println("Ordering removal of all liquidity")
+			fmt.Println()
 		}
 		//remove all liquidity
 		for i := range bots {
 			for j := range cs.Markets {
-				bots[i].RemoveAll(&cs, &cs.Markets[j], *verbosePtr)
+				bots[i].RemoveAll(&cs, &cs.Markets[j], false)
 			}
+		}
+		if *verbosePtr {
+			fmt.Println("Determining outcome and redeeming all contracts")
+			fmt.Println()
 		}
 
 		//validate the outcome that is above .97 percent
@@ -66,7 +81,7 @@ func main() {
 		//redeem all votes
 		for i := range bots {
 			for j := range cs.Markets {
-				bots[i].Redeem(&cs, &cs.Markets[j], *verbosePtr)
+				bots[i].Redeem(&cs, &cs.Markets[j], false)
 			}
 		}
 
