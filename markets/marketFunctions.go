@@ -7,6 +7,56 @@ import (
 	"github.com/DzananGanic/numericalgo/root"
 )
 
+func (m *Market) buyContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
+	//input = usd, output = contracts
+	price := cpmm.GetOutputPrice(amount, m.P.Usd, m.P.Contract.Amount)
+	//check enough usd to buy
+	if price > *balance {
+		return -1
+	}
+
+	//add usd to pool
+	m.P.Usd = m.P.Usd + price
+
+	//remove contracts from pool
+	m.P.Contract.Amount = m.P.Contract.Amount - amount
+
+	//add contracts to user
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+
+	//remove usd from user
+	*balance = *balance - price
+
+	return price
+}
+
+func (m *Market) sellContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
+	//input = contract, output = usd
+	price := cpmm.GetInputPrice(amount, m.P.Contract.Amount, m.P.Usd)
+
+	//check enough contracts to sell
+	_, ok := (*contracts)[m.Condition]
+	if !ok {
+		return -1
+	} else if (*contracts)[m.Condition].Amount < amount {
+		return -1
+	}
+
+	//remove contracts from user
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - amount}
+
+	//add contracts to pool
+	m.P.Contract.Amount = m.P.Contract.Amount + amount
+
+	//remove usd from pool
+	m.P.Usd = m.P.Usd - price
+
+	//add usd to user
+	*balance = *balance + price
+
+	return price
+}
+
 // BuyContract swaps reserve for the amount of contracts specified
 func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
 	//input = usd, output = contracts
@@ -67,7 +117,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 
 	//sell contracts to individual markets
 	for i := range cs.Markets {
-		sellPrice := cs.Markets[i].SellContract(cs, &profit, &intermediates, y)
+		sellPrice := cs.Markets[i].sellContractRaw(cs, &profit, &intermediates, y)
 		if sellPrice != -1 {
 			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", sellPrice)
 			deltaBacking = deltaBacking + sellPrice
@@ -143,7 +193,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	for i := range cs.Markets {
 		// fmt.Println(cs.Markets[i].Condition)
 		// fmt.Println(mm.profit)
-		buyPrice := cs.Markets[i].BuyContract(cs, &profit, &intermediates, y)
+		buyPrice := cs.Markets[i].buyContractRaw(cs, &profit, &intermediates, y)
 		if buyPrice != -1 {
 			fmt.Println("MarketMaker bought", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", buyPrice)
 			deltaBacking = deltaBacking - buyPrice
