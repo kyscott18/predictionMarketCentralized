@@ -18,10 +18,13 @@ func main() {
 	if *typePtr == "basic" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
 		mp1 := players.NewMarketPlayer(1, 50, *verbosePtr)
+		mm := maker.NewMarketMaker(*verbosePtr)
+
 		mp1.BuyContract(&cs, &cs.Markets[0], 5, *verbosePtr)
 		// mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		// mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
-		// mm.Make(&cs, *verbosePtr)
+		println("@@@@@selling")
+		mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
+		mm.Make(&cs, *verbosePtr)
 		// if *verbosePtr {
 		// 	mm.PrintState()
 		// }
