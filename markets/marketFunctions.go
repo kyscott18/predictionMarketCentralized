@@ -25,8 +25,6 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 	//add contracts to user
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
 
-	// mm := maker.NewMarketMaker(*verbosePtr)
-	// mm.make(&cs, *verbosePtr)
 	var profit float32 = 0
 	var intermediates map[string]Contract = make(map[string]Contract)
 	// perform balancing
@@ -69,10 +67,10 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 
 	//sell contracts to individual markets
 	for i := range cs.Markets {
-		price := cs.Markets[i].SellContract(cs, &profit, &intermediates, y)
-		if price != -1 {
-			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
-			deltaBacking = deltaBacking + price
+		sellPrice := cs.Markets[i].SellContract(cs, &profit, &intermediates, y)
+		if sellPrice != -1 {
+			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", sellPrice)
+			deltaBacking = deltaBacking + sellPrice
 		} else {
 			fmt.Println("Market Maker doesn't have enough contracts to sell", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
 			return -1
@@ -108,10 +106,66 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	//remove usd from pool
 	m.P.Usd = m.P.Usd - price
 
-	//add usd to user
-	*balance = *balance + price
+	var profit float32 = 0
+	var intermediates map[string]Contract = make(map[string]Contract)
 
-	cs.Made = false
+	f := func(x float64) float64 {
+		var eq float64 = -1
+		for _, m := range cs.Markets {
+			r := float64(m.P.Usd)
+			c := float64(m.P.Contract.Amount)
+			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
+		}
+		return eq
+	}
+
+	var totalPrice float64 = 0
+	for _, m := range cs.Markets {
+		totalPrice = totalPrice + m.GetRatioFloat64()
+	}
+
+	//TODO: find a quick algorithm for initial guess
+	initialGuess := totalPrice
+	iter := 7
+
+	result, _ := root.Newton(f, initialGuess, iter)
+	y := float32(result)
+
+	y = y * -1
+
+	//add usd to user
+	*balance = *balance + y
+
+	profit = profit + y
+
+	deltaBacking := price
+	//buy contracts from indiviual markets
+	for i := range cs.Markets {
+		// fmt.Println(cs.Markets[i].Condition)
+		// fmt.Println(mm.profit)
+		buyPrice := cs.Markets[i].BuyContract(cs, &profit, &intermediates, y)
+		if buyPrice != -1 {
+			fmt.Println("MarketMaker bought", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", buyPrice)
+			deltaBacking = deltaBacking - buyPrice
+		} else {
+			fmt.Println("MarketMaker doesn't have enough funds to buy", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+			return -1
+		}
+	}
+
+	//Sell contracts as a set
+	success := cs.SellSet(&profit, &intermediates, y)
+	//verbose statement
+	if success != -1 {
+		fmt.Println("MarketMaker sold", y, "contracts sets from the event", cs.Event, "for $", y)
+	} else {
+		fmt.Println("MarketMaker doesn't have enough contracts to sell", y, "contracts sets from the event", cs.Event)
+		return -1
+	}
+
+	//add backing to balance the pool
+	println("@@@delta backing", deltaBacking)
+	cs.Backing = cs.Backing + deltaBacking
 
 	return price
 }
