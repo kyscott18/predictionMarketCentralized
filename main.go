@@ -17,26 +17,21 @@ func main() {
 
 	if *typePtr == "basic" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, *verbosePtr)
-		mm := maker.NewMarketMaker(*verbosePtr)
 		mp1 := players.NewMarketPlayer(1, 50, *verbosePtr)
 		mp1.BuyContract(&cs, &cs.Markets[0], 5, *verbosePtr)
-		mm.Make(&cs, *verbosePtr)
-		if *verbosePtr {
-			mm.PrintState()
-		}
-		mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
-		mm.Make(&cs, *verbosePtr)
-		if *verbosePtr {
-			mm.PrintState()
-		}
-		mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		cs.Validate(cs.Markets[0], *verbosePtr)
-		mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
-		if !(*verbosePtr) {
-			mp1.PrintState()
-			cs.PrintState()
-		}
+		// mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		// mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
+		// mm.Make(&cs, *verbosePtr)
+		// if *verbosePtr {
+		// 	mm.PrintState()
+		// }
+		// mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
+		// cs.Validate(cs.Markets[0], *verbosePtr)
+		// mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
+		// if !(*verbosePtr) {
+		// 	mp1.PrintState()
+		// 	cs.PrintState()
+		// }
 	} else if *typePtr == "simulated" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, false)
 		mm := maker.NewMarketMaker(false)

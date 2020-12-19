@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"example.com/predictionMarketCentralized/cpmm"
+	"github.com/DzananGanic/numericalgo/root"
 )
 
 // BuyContract swaps reserve for the amount of contracts specified
@@ -15,9 +16,6 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 		return -1
 	}
 
-	//remove usd from user
-	*balance = *balance - price
-
 	//add usd to pool
 	m.P.Usd = m.P.Usd + price
 
@@ -27,7 +25,63 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 	//add contracts to user
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
 
-	cs.Made = false
+	// mm := maker.NewMarketMaker(*verbosePtr)
+	// mm.make(&cs, *verbosePtr)
+	var profit float32 = 0
+	var intermediates map[string]Contract = make(map[string]Contract)
+	// perform balancing
+	f := func(x float64) float64 {
+		var eq float64 = -1
+		for _, m := range cs.Markets {
+			r := float64(m.P.Usd)
+			c := float64(m.P.Contract.Amount)
+			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
+		}
+		return eq
+	}
+
+	var totalPrice float64 = 0
+	for _, m := range cs.Markets {
+		totalPrice = totalPrice + m.GetRatioFloat64()
+	}
+
+	//TODO: find a quick algorithm for initial guess
+	initialGuess := totalPrice
+	iter := 7
+
+	result, _ := root.Newton(f, initialGuess, iter)
+	y := float32(result)
+
+	//remove usd from user
+	*balance = *balance - y
+
+	profit = profit + y
+	//buy contracts as a set
+	success := cs.BuySet(&profit, &intermediates, y)
+	if success != -1 {
+		fmt.Println("MarketMaker bought", y, "contracts sets from the event", cs.Event, "for $", y)
+	} else {
+		fmt.Println("MarketMaker doesn't have enough funds to buy", y, "contracts sets from the event", cs.Event)
+		return -1
+	}
+
+	var deltaBacking float32 = -price
+
+	//sell contracts to individual markets
+	for i := range cs.Markets {
+		price := cs.Markets[i].SellContract(cs, &profit, &intermediates, y)
+		if price != -1 {
+			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", price)
+			deltaBacking = deltaBacking + price
+		} else {
+			fmt.Println("Market Maker doesn't have enough contracts to sell", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
+			return -1
+		}
+	}
+
+	//add backing to balance the pool
+	println("@@@delta backing", deltaBacking)
+	cs.Backing = cs.Backing + deltaBacking
 
 	return price
 }
