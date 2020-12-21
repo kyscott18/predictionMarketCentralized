@@ -300,7 +300,7 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 	m.P.NumPoolTokens = m.P.NumPoolTokens + numPoolTokens
 	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount + numPoolTokens, numContracts}
 
-	return numContracts
+	return numPoolTokens
 }
 
 func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, numContracts float32) float32 {
@@ -346,7 +346,7 @@ func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contra
 	m.P.NumPoolTokens = m.P.NumPoolTokens - numPoolTokens
 	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount - numPoolTokens, (*tokens)[m.Condition].OriginalNumContracts - numContracts}
 
-	return numContracts
+	return numPoolTokens
 }
 
 // Redeem swaps contracts for reserve if the outcome of the event has been determined

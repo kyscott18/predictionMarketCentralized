@@ -12,6 +12,7 @@ type MarketPlayer struct {
 	Balance   float32
 	contracts map[string]markets.Contract
 	Tokens    map[string]markets.PoolToken
+	TokensSS  map[string]markets.PoolTokenSS
 }
 
 // BuyContract swaps reserve for the amount of contracts specified from the user perspective
@@ -119,6 +120,38 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 
 }
 
+func (mp *MarketPlayer) AddLiquiditySS(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
+	numPoolTokens := m.AddLiquiditySS(cs, &mp.contracts, &mp.TokensSS, numContracts)
+
+	//verbose statement
+	if v {
+		if numContracts != -1 {
+			fmt.Println("User", mp.ID, "provided", numContracts, "contracts in exchange for", numPoolTokens, "single sided Pool Tokens from the market with the condition", m.Condition)
+		} else {
+			fmt.Println("User", mp.ID, "doesn't have enough contracts to provide", numContracts, " for single sided Pool Tokens from the market with the condition", m.Condition)
+		}
+		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
+	}
+}
+
+func (mp *MarketPlayer) RemoveLiquiditySS(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
+	numPoolTokens := m.RemoveLiquiditySS(cs, &mp.contracts, &mp.TokensSS, numContracts)
+
+	//verbose statement
+	if v {
+		if numContracts != -1 {
+			fmt.Println("User", mp.ID, "exchanged", numPoolTokens, "single sided Pool Tokens for", numContracts, "contracts from the market with the condition", m.Condition)
+		} else {
+			fmt.Println("User", mp.ID, "doesn't have enough single sided Pool Tokens to receive", numContracts, "contracts from the market with the condition", m.Condition)
+		}
+		fmt.Printf("\n")
+		mp.PrintState()
+		cs.PrintState()
+	}
+}
+
 // Redeem swaps contracts for reserve from the user perspective if the event outcome has been determined
 func (mp *MarketPlayer) Redeem(cs *markets.ContractSet, m *markets.Market, v bool) {
 	price := m.Redeem(cs, &mp.Balance, &mp.contracts)
@@ -151,7 +184,7 @@ func (mp MarketPlayer) PrintState() {
 
 // NewMarketPlayer creates a new market player
 func NewMarketPlayer(id int, startingBalance float32, v bool) MarketPlayer {
-	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken)}
+	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken), make(map[string]markets.PoolTokenSS)}
 	if v {
 		fmt.Println("New MarketPlayer")
 		fmt.Println("id:", id)

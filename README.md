@@ -13,3 +13,5 @@ Contracts are giving value 1 upon a condition. Contract sets are mutually exclus
 #TODO:
 Allow for single sided liquidity providing
 Track all funds in the poll along with the gains and loses of all users
+
+Single Sided liquidity could either be implemented by just adding the liquidity as it is requested or holding requests in a queue and adding them as pairs are formed. Adding in pairs would make sure that there would always be backing available. Adding the liquidity immeadiately would make sure that the pools grow as fast as possible but there is a possibility that the funds will not be available if every single participant adds at the same time. I am also not sure what would happen to the backing if the funds are provided with impermanent loss. 
