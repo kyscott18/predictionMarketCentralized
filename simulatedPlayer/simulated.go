@@ -1,4 +1,4 @@
-package simulatedPlayer
+package simulatedplayer
 
 import (
 	"fmt"
@@ -74,11 +74,15 @@ func (sp *SimulatedPlayer) AddOrRemove(cs *markets.ContractSet, m *markets.Marke
 
 // RemoveAll removes all of a simulated players liquidity
 func (sp *SimulatedPlayer) RemoveAll(cs *markets.ContractSet, m *markets.Market, v bool) {
-	amount := sp.mp.Tokens[m.Condition].Amount
+	numPoolTokens := sp.mp.Tokens[m.Condition].Amount
+	numPoolContractsSS := sp.mp.TokensSS[m.Condition].OriginalNumContracts
+
+	sp.mp.RemoveLiquidity(cs, m, float32(numPoolTokens), v)
+	sp.mp.RemoveLiquiditySS(cs, m, float32(numPoolContractsSS), v)
 	if v {
-		fmt.Println("User", sp.mp.ID, "has chosen to redeem", amount, "pool tokens from the event", cs.Event, "with the condition", m.Condition)
+		fmt.Println("User", sp.mp.ID, "has chosen to redeem", numPoolTokens, "pool tokens from the event", cs.Event, "with the condition", m.Condition)
+		fmt.Println("User", sp.mp.ID, "has chosen to redeem", numPoolContractsSS, "contracts from the event", cs.Event, "with the condition", m.Condition)
 	}
-	sp.mp.RemoveLiquidity(cs, m, float32(amount), v)
 }
 
 // Redeem redeems all a simualted players contracts for reserve

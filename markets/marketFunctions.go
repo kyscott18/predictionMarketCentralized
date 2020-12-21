@@ -7,81 +7,79 @@ import (
 	"github.com/DzananGanic/numericalgo/root"
 )
 
-func (m *Market) buyContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
-	//input = usd, output = contracts
-	price := cpmm.GetOutputPrice(amount, m.P.Usd, m.P.Contract.Amount)
+func (m *Market) buyContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
+	//input = reserve, output = contracts
+	numReserve := cpmm.GetOutputPrice(numContracts, m.P.Reserve, m.P.Contract.Amount)
 	//check enough usd to buy
-	if price > *balance {
+	if numReserve > *balance {
 		return -1
 	}
 
 	//add usd to pool
-	m.P.Usd = m.P.Usd + price
+	m.P.Reserve = m.P.Reserve + numReserve
 
 	//remove contracts from pool
-	m.P.Contract.Amount = m.P.Contract.Amount - amount
+	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
 
 	//add contracts to user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
 
 	//remove usd from user
-	*balance = *balance - price
+	*balance = *balance - numReserve
 
-	return price
+	return numReserve
 }
 
-func (m *Market) sellContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
+func (m *Market) sellContractRaw(cs *ContractSet, balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
 	//input = contract, output = usd
-	price := cpmm.GetInputPrice(amount, m.P.Contract.Amount, m.P.Usd)
+	numReserve := cpmm.GetInputPrice(numContracts, m.P.Contract.Amount, m.P.Reserve)
 
 	//check enough contracts to sell
 	_, ok := (*contracts)[m.Condition]
 	if !ok {
 		return -1
-	} else if (*contracts)[m.Condition].Amount < amount {
+	} else if (*contracts)[m.Condition].Amount < numContracts {
 		return -1
 	}
 
 	//remove contracts from user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - amount}
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
 
 	//add contracts to pool
-	m.P.Contract.Amount = m.P.Contract.Amount + amount
+	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
 
 	//remove usd from pool
-	m.P.Usd = m.P.Usd - price
+	m.P.Reserve = m.P.Reserve - numReserve
 
 	//add usd to user
-	*balance = *balance + price
+	*balance = *balance + numReserve
 
-	return price
+	return numReserve
 }
 
 // BuyContract swaps reserve for the amount of contracts specified
-func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
-	//input = usd, output = contracts
-	price := cpmm.GetOutputPrice(amount, m.P.Usd, m.P.Contract.Amount)
+func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
+	//input = reserve, output = contracts
+	numReserve := cpmm.GetOutputPrice(numContracts, m.P.Reserve, m.P.Contract.Amount)
 	//check enough usd to buy
-	if price > *balance {
+	if numReserve > *balance {
 		return -1
 	}
 
 	//add usd to pool
-	m.P.Usd = m.P.Usd + price
+	m.P.Reserve = m.P.Reserve + numReserve
 
 	//remove contracts from pool
-	m.P.Contract.Amount = m.P.Contract.Amount - amount
+	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
 
 	//add contracts to user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
 
-	var profit float32 = 0
-	var intermediates map[string]Contract = make(map[string]Contract)
 	// perform balancing
 	f := func(x float64) float64 {
 		var eq float64 = -1
 		for _, m := range cs.Markets {
-			r := float64(m.P.Usd)
+			r := float64(m.P.Reserve)
 			c := float64(m.P.Contract.Amount)
 			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
 		}
@@ -94,7 +92,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 	}
 
 	//TODO: find a quick algorithm for initial guess
-	initialGuess := totalPrice
+	initialGuess := float64(numReserve)
 	iter := 7
 
 	result, _ := root.Newton(f, initialGuess, iter)
@@ -103,9 +101,10 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 	//remove usd from user
 	*balance = *balance - y
 
-	profit = profit + y
+	oracle.Balance = oracle.Balance + y
+
 	//buy contracts as a set
-	success := cs.BuySet(&profit, &intermediates, y)
+	success := cs.BuySet(&oracle.Balance, &oracle.Contracts, y)
 	if success != -1 {
 		fmt.Println("MarketMaker bought", y, "contracts sets from the event", cs.Event, "for $", y)
 	} else {
@@ -113,56 +112,54 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 		return -1
 	}
 
-	var deltaBacking float32 = -price
+	var deltaBacking float32 = -numReserve
 
 	//sell contracts to individual markets
 	for i := range cs.Markets {
-		sellPrice := cs.Markets[i].sellContractRaw(cs, &profit, &intermediates, y)
-		if sellPrice != -1 {
-			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", sellPrice)
-			deltaBacking = deltaBacking + sellPrice
+		sellReserve := cs.Markets[i].sellContractRaw(cs, &oracle.Balance, &oracle.Contracts, y)
+		if sellReserve != -1 {
+			fmt.Println("MarketMaker sold", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", sellReserve)
+			deltaBacking = deltaBacking + sellReserve
 		} else {
 			fmt.Println("Market Maker doesn't have enough contracts to sell", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
 			return -1
 		}
 	}
 
+	oracle.Balance = oracle.Balance - y
+
 	//add backing to balance the pool
-	println("@@@delta backing", deltaBacking)
 	cs.Backing = cs.Backing + deltaBacking
 
-	return price
+	return y
 }
 
 // SellContract swaps the amount of contracts specified for reserve
-func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[string]Contract, amount float32) float32 {
-	//input = contract, output = usd
-	price := cpmm.GetInputPrice(amount, m.P.Contract.Amount, m.P.Usd)
+func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
+	//input = contract, output = reserve
+	numReserve := cpmm.GetInputPrice(numContracts, m.P.Contract.Amount, m.P.Reserve)
 
 	//check enough contracts to sell
 	_, ok := (*contracts)[m.Condition]
 	if !ok {
 		return -1
-	} else if (*contracts)[m.Condition].Amount < amount {
+	} else if (*contracts)[m.Condition].Amount < numContracts {
 		return -1
 	}
 
 	//remove contracts from user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - amount}
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
 
 	//add contracts to pool
-	m.P.Contract.Amount = m.P.Contract.Amount + amount
+	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
 
 	//remove usd from pool
-	m.P.Usd = m.P.Usd - price
-
-	var profit float32 = 0
-	var intermediates map[string]Contract = make(map[string]Contract)
+	m.P.Reserve = m.P.Reserve - numReserve
 
 	f := func(x float64) float64 {
 		var eq float64 = -1
 		for _, m := range cs.Markets {
-			r := float64(m.P.Usd)
+			r := float64(m.P.Reserve)
 			c := float64(m.P.Contract.Amount)
 			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
 		}
@@ -175,7 +172,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	}
 
 	//TODO: find a quick algorithm for initial guess
-	initialGuess := totalPrice
+	initialGuess := -float64(numReserve)
 	iter := 7
 
 	result, _ := root.Newton(f, initialGuess, iter)
@@ -186,17 +183,15 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	//add usd to user
 	*balance = *balance + y
 
-	profit = profit + y
+	oracle.Balance = oracle.Balance + y
 
-	deltaBacking := price
+	deltaBacking := numReserve
 	//buy contracts from indiviual markets
 	for i := range cs.Markets {
-		// fmt.Println(cs.Markets[i].Condition)
-		// fmt.Println(mm.profit)
-		buyPrice := cs.Markets[i].buyContractRaw(cs, &profit, &intermediates, y)
-		if buyPrice != -1 {
-			fmt.Println("MarketMaker bought", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", buyPrice)
-			deltaBacking = deltaBacking - buyPrice
+		buyReserve := cs.Markets[i].buyContractRaw(cs, &oracle.Balance, &oracle.Contracts, y)
+		if buyReserve != -1 {
+			fmt.Println("MarketMaker bought", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition, "for $", buyReserve)
+			deltaBacking = deltaBacking - buyReserve
 		} else {
 			fmt.Println("MarketMaker doesn't have enough funds to buy", y, "contracts from the event", cs.Event, "with the condition", cs.Markets[i].P.Contract.Condition)
 			return -1
@@ -204,7 +199,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 	}
 
 	//Sell contracts as a set
-	success := cs.SellSet(&profit, &intermediates, y)
+	success := cs.SellSet(&oracle.Balance, &oracle.Contracts, y)
 	//verbose statement
 	if success != -1 {
 		fmt.Println("MarketMaker sold", y, "contracts sets from the event", cs.Event, "for $", y)
@@ -213,73 +208,75 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 		return -1
 	}
 
+	oracle.Balance = oracle.Balance - y
+
 	//add backing to balance the pool
-	println("@@@delta backing", deltaBacking)
 	cs.Backing = cs.Backing + deltaBacking
 
-	return price
+	return y
 }
 
 // AddLiquidity provides the amount of liquidity tokens specified to the market
-func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) (float32, float32) {
-	price := amount * m.P.Usd / m.P.NumPoolTokens
-	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
+func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, numPoolTokens float32) (float32, float32) {
+	numReserve := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
+	numContracts := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
 	//check enough balance and contracts
 	_, ok := (*contracts)[m.Condition]
-	if !ok || *balance < price {
+	if !ok || *balance < numReserve {
 		return -1, -1
-	} else if (*contracts)[m.Condition].Amount < amount {
+	} else if (*contracts)[m.Condition].Amount < numContracts {
 		return -1, -1
 	}
 
 	//remove balance and contracts from user
-	*balance = *balance - price
+	*balance = *balance - numReserve
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
 
 	// add balance and user to pool
-	m.P.Usd = m.P.Usd + price
+	m.P.Reserve = m.P.Reserve + numReserve
 	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
 
 	//mint new poolTokens and add to user
-	m.P.NumPoolTokens = m.P.NumPoolTokens + amount
-	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount + amount}
+	m.P.NumPoolTokens = m.P.NumPoolTokens + numPoolTokens
+	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount + numPoolTokens}
 
-	return price, numContracts
+	return numReserve, numContracts
 }
 
 // RemoveLiquidity removes the amound of liquidity specified from the market
-func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, amount float32) (float32, float32) {
-	price := amount * m.P.Usd / m.P.NumPoolTokens
-	numContracts := amount * m.P.Contract.Amount / m.P.NumPoolTokens
+func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, numPoolTokens float32) (float32, float32) {
+	numReserve := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
+	numContracts := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
 	//check enough pool tokens
 	_, ok := (*tokens)[m.Condition]
 	if !ok {
 		return -1, -1
-	} else if (*tokens)[m.Condition].Amount < amount {
+	} else if (*tokens)[m.Condition].Amount < numPoolTokens {
 		return -1, -1
 	}
 
 	//remove balance and contacts from pool
-	m.P.Usd = m.P.Usd - price
+	m.P.Reserve = m.P.Reserve - numReserve
 	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
 
 	//add balance and contracts to user
-	*balance = *balance + price
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+	*balance = *balance + numReserve
+	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
 
 	//remove pool tokens from user and burn them
-	m.P.NumPoolTokens = m.P.NumPoolTokens - amount
-	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount - amount}
+	m.P.NumPoolTokens = m.P.NumPoolTokens - numPoolTokens
+	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount - numPoolTokens}
 
-	return price, numContracts
+	return numReserve, numContracts
 }
 
+// AddLiquiditySS adds the number of contracts to the pool and pairs with reserver from backing
 func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, numContracts float32) float32 {
-	price := numContracts * m.P.Usd / m.P.Contract.Amount
+	numReserve := numContracts * m.P.Reserve / m.P.Contract.Amount
 	numPoolTokens := numContracts * m.P.NumPoolTokens / m.P.Contract.Amount
 	//check enough balance and contracts
 	_, ok := (*contracts)[m.Condition]
-	if !ok || cs.Backing < price {
+	if !ok || cs.Backing < numReserve {
 		fmt.Println("FUCK")
 		return -1
 	} else if (*contracts)[m.Condition].Amount < numContracts {
@@ -287,13 +284,13 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 	}
 
 	//remove reserve from backing
-	cs.Backing = cs.Backing - price
+	cs.Backing = cs.Backing - numReserve
 
 	//remove contracts from user
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
 
 	// add balance and user to pool
-	m.P.Usd = m.P.Usd + price
+	m.P.Reserve = m.P.Reserve + numReserve
 	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
 
 	//mint new poolTokens and add to user
@@ -303,10 +300,11 @@ func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract,
 	return numPoolTokens
 }
 
+// RemoveLiquiditySS removes the liquidity that the player possesses and balances the returns to be the same amount of contracts as initially provided
 func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, numContracts float32) float32 {
 	numPoolTokens := numContracts * (*tokens)[m.Condition].Amount / (*tokens)[m.Condition].OriginalNumContracts
 	contractsRemoved := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
-	reserveRemoved := numPoolTokens * m.P.Usd / m.P.NumPoolTokens
+	reserveRemoved := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
 	//check enough pool tokens
 	_, ok := (*tokens)[m.Condition]
 	if !ok {
@@ -316,7 +314,7 @@ func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contra
 	}
 
 	//remove balance and contacts from pool
-	m.P.Usd = m.P.Usd - reserveRemoved
+	m.P.Reserve = m.P.Reserve - reserveRemoved
 	m.P.Contract.Amount = m.P.Contract.Amount - contractsRemoved
 
 	//add reserve and contracts to oracle
@@ -372,52 +370,52 @@ func (m *Market) Redeem(cs *ContractSet, balance *float32, contracts *map[string
 }
 
 // BuySet purchases a set of contracts for a constant rate
-func (cs *ContractSet) BuySet(balance *float32, contracts *map[string]Contract, amount float32) float32 {
-	price := amount
+func (cs *ContractSet) BuySet(balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
+	numReserve := numContracts
 
 	//check if enough usd
-	if price > *balance {
+	if numReserve > *balance {
 		return -1
 	}
 
 	//remove usd from user
-	*balance = *balance - price
+	*balance = *balance - numReserve
 
 	//add contracts to user
 	for _, m := range cs.Markets {
-		(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + amount}
+		(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
 	}
 
 	//add the funds to the backing of the liquidity pool
-	cs.Backing = cs.Backing + price
+	cs.Backing = cs.Backing + numReserve
 
-	return price
+	return numReserve
 }
 
 // SellSet sells a set of contracts for a constant rate
-func (cs *ContractSet) SellSet(balance *float32, contracts *map[string]Contract, amount float32) float32 {
-	price := amount
+func (cs *ContractSet) SellSet(balance *float32, contracts *map[string]Contract, numContracts float32) float32 {
+	numReserve := numContracts
 
 	//check if enough contracts
 	for _, m := range cs.Markets {
 		_, ok := (*contracts)[m.Condition]
 		if !ok {
 			return -1
-		} else if (*contracts)[m.Condition].Amount < amount {
+		} else if (*contracts)[m.Condition].Amount < numContracts {
 			return -1
 		}
 	}
 
 	//remove contracts from user
 	for _, m := range cs.Markets {
-		(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - amount}
+		(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
 	}
 
 	//add usd to user
-	*balance = *balance + price
+	*balance = *balance + numReserve
 
 	//remove backing from set
-	cs.Backing = cs.Backing - price
+	cs.Backing = cs.Backing - numReserve
 
-	return price
+	return numReserve
 }

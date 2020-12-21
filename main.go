@@ -4,10 +4,9 @@ import (
 	"flag"
 	"fmt"
 
-	"example.com/predictionMarketCentralized/maker"
 	"example.com/predictionMarketCentralized/markets"
 	"example.com/predictionMarketCentralized/players"
-	"example.com/predictionMarketCentralized/simulatedPlayer"
+	simulatedplayer "example.com/predictionMarketCentralized/simulatedPlayer"
 )
 
 func main() {
@@ -23,11 +22,7 @@ func main() {
 		mp1.BuyContract(&cs, &cs.Markets[0], 2, *verbosePtr)
 		mp1.RemoveLiquiditySS(&cs, &cs.Markets[0], 2, *verbosePtr)
 		// mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		// println("@@@@@selling")
 		// mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
-		// if *verbosePtr {
-		// 	mm.PrintState()
-		// }
 		// mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
 		// cs.Validate(cs.Markets[0], *verbosePtr)
 		// mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
@@ -37,14 +32,13 @@ func main() {
 		// }
 	} else if *typePtr == "simulated" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, false)
-		mm := maker.NewMarketMaker(false)
-		bots := make([]simulatedPlayer.SimulatedPlayer, 0)
+		bots := make([]simulatedplayer.SimulatedPlayer, 0)
 		if *verbosePtr {
 			fmt.Println("Creating 100 simulated players")
 			fmt.Println()
 		}
 		for i := 0; i < 100; i++ {
-			bots = append(bots, simulatedPlayer.NewSimulatedPlayer(i, 70, false))
+			bots = append(bots, simulatedplayer.NewSimulatedPlayer(i, 70, false))
 		}
 		if *verbosePtr {
 			fmt.Println("Simulating trading")
@@ -54,7 +48,6 @@ func main() {
 			for i := range bots {
 				for j := range cs.Markets {
 					bots[i].BuyOrSell(&cs, &cs.Markets[j], false)
-					mm.Make(&cs, false)
 					bots[i].AddOrRemove(&cs, &cs.Markets[j], false)
 				}
 			}
@@ -75,7 +68,7 @@ func main() {
 		}
 
 		//validate the outcome that is above .97 percent
-		simulatedPlayer.SimulateValidation(&cs)
+		simulatedplayer.SimulateValidation(&cs)
 		//redeem all votes
 		for i := range bots {
 			for j := range cs.Markets {
@@ -84,10 +77,9 @@ func main() {
 		}
 
 		//print total player money
-		fmt.Println("Total player money:", simulatedPlayer.SumPlayersBalance(bots))
+		fmt.Println("Total player money:", simulatedplayer.SumPlayersBalance(bots))
 		fmt.Println()
 
-		mm.PrintState()
 		cs.PrintState()
 
 	}

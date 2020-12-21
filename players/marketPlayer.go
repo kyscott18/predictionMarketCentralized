@@ -16,16 +16,15 @@ type MarketPlayer struct {
 }
 
 // BuyContract swaps reserve for the amount of contracts specified from the user perspective
-func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-
-	price := m.BuyContract(cs, &mp.Balance, &mp.contracts, amount)
+func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
+	numReserve := m.BuyContract(cs, &mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "bought", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", price)
+		if numReserve != -1 {
+			fmt.Println("User", mp.ID, "bought", numContracts, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", numReserve)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough funds to buy", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
+			fmt.Println("User", mp.ID, "doesn't have enough funds to buy", numContracts, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -34,16 +33,16 @@ func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, 
 }
 
 // SellContract swaps the amount of contracts specified for reserve from the user perspective
-func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
+func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
 
-	price := m.SellContract(cs, &mp.Balance, &mp.contracts, amount)
+	numReserve := m.SellContract(cs, &mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "sold", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", price)
+		if numReserve != -1 {
+			fmt.Println("User", mp.ID, "sold", numContracts, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition, "for $", numReserve)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough contracts to sell", amount, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
+			fmt.Println("User", mp.ID, "doesn't have enough contracts to sell", numContracts, "contracts from the event", cs.Event, "with the condition", m.P.Contract.Condition)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -52,15 +51,15 @@ func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market,
 }
 
 // BuySet purchases the amount of sets of contracts specified from the user prespective
-func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) {
-	price := cs.BuySet(&mp.Balance, &mp.contracts, amount)
+func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, numContracts float32, v bool) {
+	numReserve := cs.BuySet(&mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "bought", amount, "contracts sets from the event", cs.Event, "for $", price)
+		if numReserve != -1 {
+			fmt.Println("User", mp.ID, "bought", numContracts, "contracts sets from the event", cs.Event, "for $", numReserve)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough funds to buy", amount, "contracts sets from the event", cs.Event)
+			fmt.Println("User", mp.ID, "doesn't have enough funds to buy", numContracts, "contracts sets from the event", cs.Event)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -69,15 +68,15 @@ func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, amount float32, v bool) 
 }
 
 // SellSet sells the amount of sets of contracts specified from the user perspective
-func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool) {
-	price := cs.SellSet(&mp.Balance, &mp.contracts, amount)
+func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, numContracts float32, v bool) {
+	numReserve := cs.SellSet(&mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "sold", amount, "contracts sets from the event", cs.Event, "for $", price)
+		if numContracts != -1 {
+			fmt.Println("User", mp.ID, "sold", numContracts, "contracts sets from the event", cs.Event, "for $", numReserve)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough contracts to sell", amount, "contracts sets from the event", cs.Event)
+			fmt.Println("User", mp.ID, "doesn't have enough contracts to sell", numContracts, "contracts sets from the event", cs.Event)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -86,15 +85,15 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, amount float32, v bool)
 }
 
 // AddLiquidity adds the amount of liquidity specified to the market from the user perspective
-func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.AddLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, amount)
+func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, numPoolTokens float32, v bool) {
+	numReserve, numContracts := m.AddLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, numPoolTokens)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "provided", numContacts, "contracts and", price, "usd in exchange for", amount, "Pool Tokens from the market with the condition", m.Condition)
+		if numReserve != -1 {
+			fmt.Println("User", mp.ID, "provided", numContracts, "contracts and", numReserve, "reserve in exchange for", numPoolTokens, "Pool Tokens from the market with the condition", m.Condition)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough contracts or usd to receive", amount, "Pool Tokens from the market with the condition", m.Condition)
+			fmt.Println("User", mp.ID, "doesn't have enough contracts or reserve to receive", numPoolTokens, "Pool Tokens from the market with the condition", m.Condition)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -103,15 +102,15 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market,
 }
 
 // RemoveLiquidity removes the amount of liquidity specified from the user perspective
-func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, amount float32, v bool) {
-	price, numContacts := m.RemoveLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, amount)
+func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, numPoolTokens float32, v bool) {
+	numReserve, numContacts := m.RemoveLiquidity(cs, &mp.Balance, &mp.contracts, &mp.Tokens, numPoolTokens)
 
 	//verbose statement
 	if v {
-		if price != -1 {
-			fmt.Println("User", mp.ID, "exchanged", amount, "Pool Tokens for", numContacts, "contracts and", price, "usd from the market with the condition", m.Condition)
+		if numReserve != -1 {
+			fmt.Println("User", mp.ID, "exchanged", numPoolTokens, "Pool Tokens for", numContacts, "contracts and", numReserve, "reserve from the market with the condition", m.Condition)
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough Pool Tokens to exchange", amount, "Pool Tokens from the market with the condition", m.Condition)
+			fmt.Println("User", mp.ID, "doesn't have enough Pool Tokens to exchange", numPoolTokens, "Pool Tokens from the market with the condition", m.Condition)
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -120,6 +119,7 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 
 }
 
+// AddLiquiditySS adds the amount of contracts specified and pairs them with reserve from backing to provide liquidity
 func (mp *MarketPlayer) AddLiquiditySS(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
 	numPoolTokens := m.AddLiquiditySS(cs, &mp.contracts, &mp.TokensSS, numContracts)
 
@@ -136,6 +136,7 @@ func (mp *MarketPlayer) AddLiquiditySS(cs *markets.ContractSet, m *markets.Marke
 	}
 }
 
+// RemoveLiquiditySS removes the amount of contracts specified and an equal amount of reserve
 func (mp *MarketPlayer) RemoveLiquiditySS(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
 	numPoolTokens := m.RemoveLiquiditySS(cs, &mp.contracts, &mp.TokensSS, numContracts)
 
@@ -178,6 +179,9 @@ func (mp MarketPlayer) PrintState() {
 	}
 	for _, element := range mp.Tokens {
 		fmt.Println("PoolToken condition:", element.Condition, ", amount:", element.Amount)
+	}
+	for _, element := range mp.TokensSS {
+		fmt.Println("PoolTokenSS condition:", element.Condition, ", contracts:", element.OriginalNumContracts)
 	}
 	fmt.Printf("\n")
 }
