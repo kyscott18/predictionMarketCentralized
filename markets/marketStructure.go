@@ -2,8 +2,13 @@ package markets
 
 import "fmt"
 
-// MarketCreatorToken is the PoolTokens that are held by the creator of the market
-var MarketCreatorToken map[string]PoolToken
+type MarketCreator struct {
+	Balance   float32
+	Contracts map[string]Contract
+	Tokens    map[string]PoolToken
+}
+
+var oracle MarketCreator
 
 // Contract is the type that represents a contract for an event
 type Contract struct {
@@ -15,6 +20,13 @@ type Contract struct {
 type PoolToken struct {
 	Condition string
 	Amount    float32
+}
+
+// PoolTokenSS is the type that represents stake in the contracts half of a liquidity pool
+type PoolTokenSS struct {
+	Condition            string
+	Amount               float32
+	OriginalNumContracts float32
 }
 
 // Pool is the type that represents a liquidity pool containing contracts and usd
@@ -52,12 +64,12 @@ type ContractSet struct {
 // NewContractSet creates a new contract set
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32, v bool) ContractSet {
 	markets := make([]Market, 0)
-	MarketCreatorToken := make(map[string]PoolToken)
+	oracle = MarketCreator{0, make(map[string]Contract), make(map[string]PoolToken)}
 	for i := 0; i < len(conditions); i++ {
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
 		p := Pool{contract, usd, numContracts}
-		MarketCreatorToken[conditions[i]] = PoolToken{conditions[i], MarketCreatorToken[conditions[i]].Amount + numContracts}
+		oracle.Tokens[conditions[i]] = PoolToken{conditions[i], numContracts}
 		markets = append(markets, Market{p, conditions[i]})
 	}
 
