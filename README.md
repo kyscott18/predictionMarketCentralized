@@ -1,17 +1,21 @@
 This is going to be a proof of concept for my prediction market technology that I hope to implement in a decentralized setting in the future. 
-Contracts are giving value 1 upon a condition. Contract sets are mutually exclusive and cover all outcomes of an event. Each contract has a separate market with an underlying liquidity pool. Each liquidity pool is guided with an automated constant product market maker. Each pool can be ineracted with independetly by buying or selling a contract. The structure also supports buying and selling complete sets of contracts for the derived value of 1. This enables second level market making to be done if the combined implied probability of all the markets in the set is not 1. Second level market making is done by either buying sets of contracts and selling to individual markets or buying from individual markets and selling sets of contracts. Liquidity can be provided to markets by providing contracts and reserve backing at the current ratio. Players are rewarded with a proportional amount of pool tokens which can be traded in at a later time for contracts and reserve backing at that current ratio. Providing liquidity in this way however opens the player up to a large amount of impermanent loss. If we add a backing pool of reserve that is added whenever a user buys a set and subtracted whenever a user sells a set, we can allow users to supply only contracts when providing liquidity and the reserve will be taken from the pool. There are some problems with this however when the user tries to redeem the partial liquidity token, they may not be able to get all of their liquidity out. 
 
-1. Allow for the creation of bets, creation of markets for bets and underlying liquidity pools, 
-2. Create market players and swaps
-3. Implement second level market making 
-4. Simulated Participants using the ratio between contracts and usd in a pool and bernoulli distributions
-5. Add balance pool to each ContractSet so that we can monitor value
-6. Add pool tokens for each of the pools
-7. Allow for adding contracts to pools and pulling funds from balance pool
-8. Verification of contract outcome and redeeming, done by verifying outcome of event
+The core priniciple is that contracts are tokens who represent a value if a condition is met and no value if it is not. It is easiest to determine this number to be 1. 
 
-#TODO:
-Allow for single sided liquidity providing
-Track all funds in the poll along with the gains and loses of all users
+Contracts sets can be formed where the set of contracts are mutually exclusive and cover the complete set of outcomes. 
 
-Single Sided liquidity could either be implemented by just adding the liquidity as it is requested or holding requests in a queue and adding them as pairs are formed. Adding in pairs would make sure that there would always be backing available. Adding the liquidity immeadiately would make sure that the pools grow as fast as possible but there is a possibility that the funds will not be available if every single participant adds at the same time. I am also not sure what would happen to the backing if the funds are provided with impermanent loss. 
+These contracts can be traded in a system that uses liquidity pools driven by an automated market maker. I chose to use the constant product market maker where x*y=k.
+
+Each market offers a swap between a reserve currency and whatever contract that market supports. 
+
+In order to be able to redeem all contracts, there must be enough reserve in the overall market. We must have a backing fund that is used for redeeming validated contracts. 
+
+Because of the nature of the contract sets the market also supports buying or selling complete contracts sets for a value of one. The funds are added or subtracted from the backing fund to allow for this. 
+
+When a swap is made in one of the market composing a set, this leaves the overall set unbalanced because the value of all the contracts in the set is not equal to one. Therefore, there is a number of contracts that can bought or sold and a set and sold or bought from individual markets, respectively. 
+
+Impermanent loss leads to the loss of value from a market using the liquidity pool structure if left unchecked. The market must itself perform the second level market making that occurs when a swap is made in an individual market and use some of these profits to make sure that the set is sufficiently backed and return the rest to the participant. 
+
+Liquidity can be provided to allow the market pools to grow which allows for lower price slippage. To do this a participant provides an equal ratio of the contract and the reserve. 
+
+Because of impermanent loss, the liquidity provider opens themselves up to almost complete losses which is unexpected for many. Single sided liquidity provided allows for market participants to provide only the contracts that they have accumulated and the correct amount of reserve is taken from backing and added as liquidity. 
