@@ -17,19 +17,21 @@ func main() {
 	if *typePtr == "basic" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 20, *verbosePtr)
 		mp1 := players.NewMarketPlayer(1, 50, *verbosePtr)
+		if *verbosePtr {
+			mp1.PrintState()
+			cs.PrintState()
+		}
 		mp1.BuySet(&cs, 2, *verbosePtr)
 		mp1.AddLiquiditySS(&cs, &cs.Markets[0], 2, *verbosePtr)
 		mp1.BuyContract(&cs, &cs.Markets[0], 2, *verbosePtr)
 		mp1.RemoveLiquiditySS(&cs, &cs.Markets[0], 2, *verbosePtr)
-		// mp1.AddLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		// mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
-		// mp1.RemoveLiquidity(&cs, &cs.Markets[0], 1.5, *verbosePtr)
-		// cs.Validate(cs.Markets[0], *verbosePtr)
-		// mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
-		// if !(*verbosePtr) {
-		// 	mp1.PrintState()
-		// 	cs.PrintState()
-		// }
+
+		cs.Validate(cs.Markets[0], *verbosePtr)
+		mp1.Redeem(&cs, &cs.Markets[0], *verbosePtr)
+		if !(*verbosePtr) {
+			mp1.PrintState()
+			cs.PrintState()
+		}
 	} else if *typePtr == "simulated" {
 		cs := markets.NewContractSet("coin flip", []string{"heads", "tails"}, []float32{.5, .5}, 200, false)
 		bots := make([]simulatedplayer.SimulatedPlayer, 0)
@@ -78,6 +80,10 @@ func main() {
 
 		//print total player money
 		fmt.Println("Total player money:", simulatedplayer.SumPlayersBalance(bots))
+		fmt.Println()
+
+		//print total contracts minted
+		fmt.Println("Total contracts minted:", markets.TotalContractsMinted)
 		fmt.Println()
 
 		cs.PrintState()

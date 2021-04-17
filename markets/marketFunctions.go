@@ -93,7 +93,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float32, contracts *map[s
 
 	//TODO: find a quick algorithm for initial guess
 	initialGuess := float64(numReserve)
-	iter := 7
+	iter := 20
 
 	result, _ := root.Newton(f, initialGuess, iter)
 	y := float32(result)
@@ -173,7 +173,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 
 	//TODO: find a quick algorithm for initial guess
 	initialGuess := -float64(numReserve)
-	iter := 7
+	iter := 20
 
 	result, _ := root.Newton(f, initialGuess, iter)
 	y := float32(result)
@@ -305,6 +305,7 @@ func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contra
 	numPoolTokens := numContracts * (*tokens)[m.Condition].Amount / (*tokens)[m.Condition].OriginalNumContracts
 	contractsRemoved := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
 	reserveRemoved := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
+
 	//check enough pool tokens
 	_, ok := (*tokens)[m.Condition]
 	if !ok {
@@ -313,10 +314,6 @@ func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contra
 		return -1
 	}
 
-	//remove balance and contacts from pool
-	m.P.Reserve = m.P.Reserve - reserveRemoved
-	m.P.Contract.Amount = m.P.Contract.Amount - contractsRemoved
-
 	//add reserve and contracts to oracle
 	oracle.Balance = oracle.Balance + reserveRemoved
 	oracle.Contracts[m.Condition] = Contract{m.Condition, oracle.Contracts[m.Condition].Amount + contractsRemoved}
@@ -324,13 +321,18 @@ func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contra
 	// Balance if the ratio has changed since adding liquidity
 	if numContracts > reserveRemoved {
 		//trade reserve for more contracts
-		m.BuyContract(cs, &oracle.Balance, &oracle.Contracts, numContracts-reserveRemoved)
+		// println(m.BuyContract(cs, &oracle.Balance, &oracle.Contracts, numContracts-reserveRemoved))
+		m.BuyContract(cs, &oracle.Balance, &oracle.Contracts, numContracts-contractsRemoved)
 
 	} else if numContracts < reserveRemoved {
 		//trade contracts for backing
-		m.SellContract(cs, &oracle.Balance, &oracle.Contracts, reserveRemoved-numContracts)
+		m.SellContract(cs, &oracle.Balance, &oracle.Contracts, contractsRemoved-numContracts)
 		//assert missing reserve is greater than the expected amount
 	}
+
+	//remove balance and contacts from pool
+	m.P.Reserve = m.P.Reserve - reserveRemoved
+	m.P.Contract.Amount = m.P.Contract.Amount - contractsRemoved
 
 	//add contracts to user
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
@@ -389,6 +391,8 @@ func (cs *ContractSet) BuySet(balance *float32, contracts *map[string]Contract, 
 	//add the funds to the backing of the liquidity pool
 	cs.Backing = cs.Backing + numReserve
 
+	TotalContractsMinted += numContracts
+
 	return numReserve
 }
 
@@ -416,6 +420,8 @@ func (cs *ContractSet) SellSet(balance *float32, contracts *map[string]Contract,
 
 	//remove backing from set
 	cs.Backing = cs.Backing - numReserve
+
+	TotalContractsMinted -= numContracts
 
 	return numReserve
 }

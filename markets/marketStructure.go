@@ -11,6 +11,8 @@ type MarketCreator struct {
 
 var oracle MarketCreator
 
+var TotalContractsMinted float32
+
 // Contract is the type that represents a contract for an event
 type Contract struct {
 	Condition string
@@ -65,6 +67,7 @@ type ContractSet struct {
 func NewContractSet(event string, conditions []string, ratios []float32, numContracts float32, v bool) ContractSet {
 	markets := make([]Market, 0)
 	oracle = MarketCreator{0, make(map[string]Contract), make(map[string]PoolToken)}
+	TotalContractsMinted += numContracts
 	for i := 0; i < len(conditions); i++ {
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
