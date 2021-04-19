@@ -116,7 +116,6 @@ func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Mark
 		mp.PrintState()
 		cs.PrintState()
 	}
-
 }
 
 // AddLiquiditySS adds the amount of contracts specified and pairs them with reserve from backing to provide liquidity
