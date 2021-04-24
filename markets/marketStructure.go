@@ -21,22 +21,13 @@ type Contract struct {
 
 // PoolToken is the type that represents stake in a liquidity pool
 type PoolToken struct {
-	Condition string
-	Amount    float32
-}
-
-// PoolTokenSS is the type that represents stake in the contracts half of a liquidity pool
-type PoolTokenSS struct {
-	Condition            string
-	Amount               float32
-	OriginalNumContracts float32
+	Amount float32
 }
 
 // Pool is the type that represents a liquidity pool containing contracts and usd
 type Pool struct {
-	Contract      Contract
-	Reserve       float32
-	NumPoolTokens float32
+	Contract Contract
+	Reserve  float32
 }
 
 // Market is the type that represents a market for the contract with the condition given
@@ -71,8 +62,7 @@ func NewContractSet(event string, conditions []string, ratios []float32, numCont
 	for i := 0; i < len(conditions); i++ {
 		contract := Contract{conditions[i], numContracts}
 		usd := float32(numContracts) * ratios[i]
-		p := Pool{contract, usd, numContracts}
-		oracle.Tokens[conditions[i]] = PoolToken{conditions[i], numContracts}
+		p := Pool{contract, usd}
 		markets = append(markets, Market{p, conditions[i]})
 	}
 

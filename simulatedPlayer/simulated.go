@@ -62,26 +62,23 @@ func (sp *SimulatedPlayer) AddOrRemove(cs *markets.ContractSet, m *markets.Marke
 		if v {
 			fmt.Println("User", sp.mp.ID, "has chosen to pursue", amount, "pool tokens from the event", cs.Event, "with the condition", m.Condition)
 		}
-		sp.mp.AddLiquidity(cs, m, float32(amount), v)
+		sp.mp.AddLiquidity(cs, float32(amount), v)
 	} else {
 		amount := math.Round(r1.Float64()*10 + 1)
 		if v {
 			fmt.Println("User", sp.mp.ID, "has chosen to redeem", amount, "pool tokens from the event", cs.Event, "with the condition", m.Condition)
 		}
-		sp.mp.RemoveLiquidity(cs, m, float32(amount), v)
+		sp.mp.RemoveLiquidity(cs, float32(amount), v)
 	}
 }
 
 // RemoveAll removes all of a simulated players liquidity
-func (sp *SimulatedPlayer) RemoveAll(cs *markets.ContractSet, m *markets.Market, v bool) {
-	numPoolTokens := sp.mp.Tokens[m.Condition].Amount
-	numPoolContractsSS := sp.mp.TokensSS[m.Condition].OriginalNumContracts
+func (sp *SimulatedPlayer) RemoveAll(cs *markets.ContractSet, v bool) {
+	numPoolTokens := sp.mp.Tokens
 
-	sp.mp.RemoveLiquidity(cs, m, float32(numPoolTokens), v)
-	sp.mp.RemoveLiquiditySS(cs, m, float32(numPoolContractsSS), v)
+	sp.mp.RemoveLiquidity(cs, float32(numPoolTokens), v)
 	if v {
-		fmt.Println("User", sp.mp.ID, "has chosen to redeem", numPoolTokens, "pool tokens from the event", cs.Event, "with the condition", m.Condition)
-		fmt.Println("User", sp.mp.ID, "has chosen to redeem", numPoolContractsSS, "contracts from the event", cs.Event, "with the condition", m.Condition)
+		fmt.Println("User", sp.mp.ID, "has chosen to redeem", numPoolTokens, "pool tokens")
 	}
 }
 

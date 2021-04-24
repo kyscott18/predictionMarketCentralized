@@ -217,134 +217,49 @@ func (m *Market) SellContract(cs *ContractSet, balance *float32, contracts *map[
 }
 
 // AddLiquidity provides the amount of liquidity tokens specified to the market
-func (m *Market) AddLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, numPoolTokens float32) (float32, float32) {
-	numReserve := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
-	numContracts := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
-	//check enough balance and contracts
-	_, ok := (*contracts)[m.Condition]
-	if !ok || *balance < numReserve {
-		return -1, -1
-	} else if (*contracts)[m.Condition].Amount < numContracts {
-		return -1, -1
-	}
+func (cs *ContractSet) AddLiquidity(balance *float32, tokens *float32, numPoolTokens float32) float32 {
 
-	//remove balance and contracts from user
-	*balance = *balance - numReserve
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
-
-	// add balance and user to pool
-	m.P.Reserve = m.P.Reserve + numReserve
-	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
-
-	//mint new poolTokens and add to user
-	m.P.NumPoolTokens = m.P.NumPoolTokens + numPoolTokens
-	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount + numPoolTokens}
-
-	return numReserve, numContracts
-}
-
-// RemoveLiquidity removes the amound of liquidity specified from the market
-func (m *Market) RemoveLiquidity(cs *ContractSet, balance *float32, contracts *map[string]Contract, tokens *map[string]PoolToken, numPoolTokens float32) (float32, float32) {
-	numReserve := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
-	numContracts := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
-	//check enough pool tokens
-	_, ok := (*tokens)[m.Condition]
-	if !ok {
-		return -1, -1
-	} else if (*tokens)[m.Condition].Amount < numPoolTokens {
-		return -1, -1
-	}
-
-	//remove balance and contacts from pool
-	m.P.Reserve = m.P.Reserve - numReserve
-	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
-
-	//add balance and contracts to user
-	*balance = *balance + numReserve
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
-
-	//remove pool tokens from user and burn them
-	m.P.NumPoolTokens = m.P.NumPoolTokens - numPoolTokens
-	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount - numPoolTokens}
-
-	return numReserve, numContracts
-}
-
-// AddLiquiditySS adds the number of contracts to the pool and pairs with reserver from backing
-func (m *Market) AddLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, numContracts float32) float32 {
-	numReserve := numContracts * m.P.Reserve / m.P.Contract.Amount
-	numPoolTokens := numContracts * m.P.NumPoolTokens / m.P.Contract.Amount
-	//check enough balance and contracts
-	_, ok := (*contracts)[m.Condition]
-	if !ok || cs.Backing < numReserve {
-		fmt.Println("FUCK")
-		return -1
-	} else if (*contracts)[m.Condition].Amount < numContracts {
+	//check enough balance
+	if *balance < numPoolTokens {
 		return -1
 	}
 
-	//remove reserve from backing
-	cs.Backing = cs.Backing - numReserve
+	//remove balance from user
+	*balance = *balance - numPoolTokens
 
-	//remove contracts from user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
+	//add pool tokens to user
+	*tokens = *tokens + numPoolTokens
 
-	// add balance and user to pool
-	m.P.Reserve = m.P.Reserve + numReserve
-	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
-
-	//mint new poolTokens and add to user
-	m.P.NumPoolTokens = m.P.NumPoolTokens + numPoolTokens
-	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount + numPoolTokens, numContracts}
+	// add liquidity to pool
+	TotalContractsMinted = TotalContractsMinted + numPoolTokens
+	for i := range cs.Markets {
+		cs.Markets[i].P.Reserve = cs.Markets[i].P.Reserve + numPoolTokens*cs.Markets[i].GetRatioFloat32()
+		cs.Markets[i].P.Contract.Amount = cs.Markets[i].P.Contract.Amount + numPoolTokens
+	}
 
 	return numPoolTokens
 }
 
-// RemoveLiquiditySS removes the liquidity that the player possesses and balances the returns to be the same amount of contracts as initially provided
-func (m *Market) RemoveLiquiditySS(cs *ContractSet, contracts *map[string]Contract, tokens *map[string]PoolTokenSS, numContracts float32) float32 {
-	numPoolTokens := numContracts * (*tokens)[m.Condition].Amount / (*tokens)[m.Condition].OriginalNumContracts
-	contractsRemoved := numPoolTokens * m.P.Contract.Amount / m.P.NumPoolTokens
-	reserveRemoved := numPoolTokens * m.P.Reserve / m.P.NumPoolTokens
-
+// RemoveLiquidity removes the amound of liquidity specified from the market
+func (cs *ContractSet) RemoveLiquidity(balance *float32, tokens *float32, numPoolTokens float32) float32 {
 	//check enough pool tokens
-	_, ok := (*tokens)[m.Condition]
-	if !ok {
-		return -1
-	} else if (*tokens)[m.Condition].OriginalNumContracts < numContracts {
+	if numPoolTokens > *tokens {
 		return -1
 	}
 
-	//add reserve and contracts to oracle
-	oracle.Balance = oracle.Balance + reserveRemoved
-	oracle.Contracts[m.Condition] = Contract{m.Condition, oracle.Contracts[m.Condition].Amount + contractsRemoved}
-
-	// Balance if the ratio has changed since adding liquidity
-	if numContracts > reserveRemoved {
-		//trade reserve for more contracts
-		// println(m.BuyContract(cs, &oracle.Balance, &oracle.Contracts, numContracts-reserveRemoved))
-		m.BuyContract(cs, &oracle.Balance, &oracle.Contracts, numContracts-contractsRemoved)
-
-	} else if numContracts < reserveRemoved {
-		//trade contracts for backing
-		m.SellContract(cs, &oracle.Balance, &oracle.Contracts, contractsRemoved-numContracts)
-		//assert missing reserve is greater than the expected amount
+	//remove liquidity from pool
+	for i := range cs.Markets {
+		cs.Markets[i].P.Reserve = cs.Markets[i].P.Reserve - cs.Markets[i].P.Reserve*(numPoolTokens/TotalContractsMinted)
+		cs.Markets[i].P.Contract.Amount = cs.Markets[i].P.Contract.Amount - cs.Markets[i].P.Contract.Amount*(numPoolTokens/TotalContractsMinted)
 	}
+	cs.Backing = cs.Backing - cs.Backing*(numPoolTokens/TotalContractsMinted)
+	TotalContractsMinted = TotalContractsMinted - numPoolTokens
 
-	//remove balance and contacts from pool
-	m.P.Reserve = m.P.Reserve - reserveRemoved
-	m.P.Contract.Amount = m.P.Contract.Amount - contractsRemoved
-
-	//add contracts to user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
-	oracle.Contracts[m.Condition] = Contract{m.Condition, oracle.Contracts[m.Condition].Amount - numContracts}
-
-	//add reserve as backing
-	(*cs).Backing = (*cs).Backing + oracle.Balance
-	oracle.Balance = 0
+	//add balance and contracts to user
+	*balance = *balance + numPoolTokens
 
 	//remove pool tokens from user and burn them
-	m.P.NumPoolTokens = m.P.NumPoolTokens - numPoolTokens
-	(*tokens)[m.Condition] = PoolTokenSS{m.Condition, (*tokens)[m.Condition].Amount - numPoolTokens, (*tokens)[m.Condition].OriginalNumContracts - numContracts}
+	*tokens = *tokens - numPoolTokens
 
 	return numPoolTokens
 }
