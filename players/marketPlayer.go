@@ -9,13 +9,13 @@ import (
 // MarketPlayer is the type that represents a participant in the market
 type MarketPlayer struct {
 	ID        int
-	Balance   float32
+	Balance   float64
 	contracts map[string]markets.Contract
-	Tokens    float32
+	Tokens    map[string]markets.PoolToken
 }
 
 // BuyContract swaps reserve for the amount of contracts specified from the user perspective
-func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
+func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, numContracts float64, v bool) {
 	numReserve := m.BuyContract(cs, &mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
@@ -32,7 +32,7 @@ func (mp *MarketPlayer) BuyContract(cs *markets.ContractSet, m *markets.Market, 
 }
 
 // SellContract swaps the amount of contracts specified for reserve from the user perspective
-func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, numContracts float32, v bool) {
+func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market, numContracts float64, v bool) {
 
 	numReserve := m.SellContract(cs, &mp.Balance, &mp.contracts, numContracts)
 
@@ -50,7 +50,7 @@ func (mp *MarketPlayer) SellContract(cs *markets.ContractSet, m *markets.Market,
 }
 
 // BuySet purchases the amount of sets of contracts specified from the user prespective
-func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, numContracts float32, v bool) {
+func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, numContracts float64, v bool) {
 	numReserve := cs.BuySet(&mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
@@ -67,7 +67,7 @@ func (mp *MarketPlayer) BuySet(cs *markets.ContractSet, numContracts float32, v 
 }
 
 // SellSet sells the amount of sets of contracts specified from the user perspective
-func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, numContracts float32, v bool) {
+func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, numContracts float64, v bool) {
 	numReserve := cs.SellSet(&mp.Balance, &mp.contracts, numContracts)
 
 	//verbose statement
@@ -84,15 +84,15 @@ func (mp *MarketPlayer) SellSet(cs *markets.ContractSet, numContracts float32, v
 }
 
 // AddLiquidity adds the amount of liquidity specified to the market from the user perspective
-func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, numPoolTokens float32, v bool) {
-	tokens := cs.AddLiquidity(&mp.Balance, &mp.Tokens, numPoolTokens)
+func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, m *markets.Market, numContracts float64, v bool) {
+	tokens := m.AddLiquidity(cs, &mp.contracts, &mp.Tokens, numContracts)
 
 	//verbose statement
 	if v {
 		if tokens != -1 {
-			fmt.Println("User", mp.ID, "provided", numPoolTokens, "reserve in exchange for", numPoolTokens, "Pool Tokens")
+			fmt.Println("User", mp.ID, "provided", numContracts, "reserve in exchange for", tokens, "Pool Tokens")
 		} else {
-			fmt.Println("User", mp.ID, "doesn't have enough reserve to receive", numPoolTokens, "Pool Tokens")
+			fmt.Println("User", mp.ID, "doesn't have enough contracts to provide", numContracts, "as liquidity")
 		}
 		fmt.Printf("\n")
 		mp.PrintState()
@@ -101,8 +101,8 @@ func (mp *MarketPlayer) AddLiquidity(cs *markets.ContractSet, numPoolTokens floa
 }
 
 // RemoveLiquidity removes the amount of liquidity specified from the user perspective
-func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, numPoolTokens float32, v bool) {
-	tokens := cs.RemoveLiquidity(&mp.Balance, &mp.Tokens, numPoolTokens)
+func (mp *MarketPlayer) RemoveLiquidity(cs *markets.ContractSet, m *markets.Market, numPoolTokens float64, v bool) {
+	tokens := m.RemoveLiquidity(cs, &mp.contracts, &mp.Tokens, numPoolTokens)
 
 	//verbose statement
 	if v {
@@ -141,13 +141,16 @@ func (mp MarketPlayer) PrintState() {
 	for _, element := range mp.contracts {
 		fmt.Println("Contract condition:", element.Condition, ", amount:", element.Amount)
 	}
-	fmt.Println("PoolTokens:", mp.Tokens)
+	fmt.Println("Pool Tokens:")
+	for _, element := range mp.Tokens {
+		fmt.Println("Contract condition:", element.Condition, ", amount:", element.Amount)
+	}
 	fmt.Printf("\n")
 }
 
 // NewMarketPlayer creates a new market player
-func NewMarketPlayer(id int, startingBalance float32, v bool) MarketPlayer {
-	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), 0}
+func NewMarketPlayer(id int, startingBalance float64, v bool) MarketPlayer {
+	mp := MarketPlayer{id, startingBalance, make(map[string]markets.Contract), make(map[string]markets.PoolToken)}
 	if v {
 		fmt.Println("New MarketPlayer")
 		fmt.Println("id:", id)
