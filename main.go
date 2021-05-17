@@ -22,6 +22,8 @@ func main() {
 			cs.PrintState()
 		}
 		mp1.BuyContract(&cs, &cs.Markets[0], 2, *verbosePtr)
+		mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)
+
 		// mp1.BuyContract(&cs, &cs.Markets[0], 2, *verbosePtr)
 		// mp1.BuySet(&cs, 2, *verbosePtr)
 		// mp1.SellContract(&cs, &cs.Markets[0], 2, *verbosePtr)

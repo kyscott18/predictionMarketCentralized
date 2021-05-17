@@ -10,7 +10,7 @@ import (
 
 func (m *Market) buyContractRaw(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = reserve, output = contracts
-	numReserve := cpmm.GetOutputPrice(numContracts, m.P.Reserve, m.P.Contract.Amount)
+	numReserve := cpmm.GetAmountIn(numContracts, m.P.Reserve, m.P.Contract.Amount)
 	//check enough usd to buy
 	if numReserve > *balance {
 		return -1
@@ -33,7 +33,7 @@ func (m *Market) buyContractRaw(cs *ContractSet, balance *float64, contracts *ma
 
 func (m *Market) sellContractRaw(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = contract, output = usd
-	numReserve := cpmm.GetInputPrice(numContracts, m.P.Contract.Amount, m.P.Reserve)
+	numReserve := cpmm.GetAmountOut(numContracts, m.P.Contract.Amount, m.P.Reserve)
 
 	//check enough contracts to sell
 	_, ok := (*contracts)[m.Condition]
@@ -61,7 +61,7 @@ func (m *Market) sellContractRaw(cs *ContractSet, balance *float64, contracts *m
 // BuyContract swaps reserve for the amount of contracts specified
 func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = reserve, output = contracts
-	numReserve := cpmm.GetOutputPrice(numContracts, m.P.Reserve, m.P.Contract.Amount)
+	numReserve := cpmm.GetAmountIn(numContracts, m.P.Reserve, m.P.Contract.Amount)
 	fmt.Println("Initial Price: ", numReserve)
 	//check enough usd to buy
 	if numReserve > *balance {
@@ -81,9 +81,10 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 	f := func(x float64) float64 {
 		var eq float64 = -1
 		for _, m := range cs.Markets {
-			r := float64(m.P.Reserve)
-			c := float64(m.P.Contract.Amount)
-			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
+			r := m.P.Reserve
+			c := m.P.Contract.Amount
+			eq = eq + ((r - cpmm.GetAmountOut(x, c, r)) / (c + x))
+			// cpmm.GetInputPrice(x, c, r)
 		}
 		return eq
 	}
@@ -94,7 +95,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 	}
 
 	//TODO: find a quick algorithm for initial guess
-	initialGuess := float64(numReserve)
+	initialGuess := numReserve
 	iter := 20
 
 	result, _ := root.Newton(f, initialGuess, iter)
@@ -142,7 +143,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 // SellContract swaps the amount of contracts specified for reserve
 func (m *Market) SellContract(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = contract, output = reserve
-	numReserve := cpmm.GetInputPrice(numContracts, m.P.Contract.Amount, m.P.Reserve)
+	numReserve := cpmm.GetAmountOut(numContracts, m.P.Contract.Amount, m.P.Reserve)
 
 	//check enough contracts to sell
 	_, ok := (*contracts)[m.Condition]
@@ -164,9 +165,9 @@ func (m *Market) SellContract(cs *ContractSet, balance *float64, contracts *map[
 	f := func(x float64) float64 {
 		var eq float64 = -1
 		for _, m := range cs.Markets {
-			r := float64(m.P.Reserve)
-			c := float64(m.P.Contract.Amount)
-			eq = eq + ((r - (r*x)/(c+x)) / (c + x))
+			r := m.P.Reserve
+			c := m.P.Contract.Amount
+			eq = eq + ((r - cpmm.GetAmountIn(x, r, c)) / (c + x))
 		}
 		return eq
 	}
@@ -177,7 +178,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float64, contracts *map[
 	}
 
 	//TODO: find a quick algorithm for initial guess
-	initialGuess := -float64(numReserve)
+	initialGuess := -numReserve
 	iter := 20
 
 	result, _ := root.Newton(f, initialGuess, iter)
