@@ -19,7 +19,3 @@ Impermanent loss leads to the loss of value from a market using the liquidity po
 Liquidity can be provided to allow the market pools to grow which allows for lower price slippage. To do this a participant provides an equal ratio of the contract and the reserve. 
 
 Because of impermanent loss, the liquidity provider opens themselves up to almost complete losses which is unexpected for many. Single sided liquidity provided allows for market participants to provide only the contracts that they have accumulated and the correct amount of reserve is taken from backing and added as liquidity. 
-
-TODO: fix liquidity providing token distribution to account for fees. 
-TODO: fix readme
-TODO: fix main

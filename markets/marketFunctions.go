@@ -2,7 +2,6 @@ package markets
 
 import (
 	"fmt"
-	"math"
 
 	"example.com/predictionMarketCentralized/cpmm"
 	"github.com/DzananGanic/numericalgo/root"
@@ -33,7 +32,7 @@ func (m *Market) buyContractRaw(cs *ContractSet, balance *float64, contracts *ma
 
 func (m *Market) sellContractRaw(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = contract, output = usd
-	numReserve := cpmm.GetAmountOut(numContracts, m.P.Contract.Amount, m.P.Reserve)
+	numReserve := cpmm.GetAmountOut(numContracts, m.P.Reserve, m.P.Contract.Amount)
 
 	//check enough contracts to sell
 	_, ok := (*contracts)[m.Condition]
@@ -61,21 +60,8 @@ func (m *Market) sellContractRaw(cs *ContractSet, balance *float64, contracts *m
 // BuyContract swaps reserve for the amount of contracts specified
 func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = reserve, output = contracts
-	numReserve := cpmm.GetAmountIn(numContracts, m.P.Reserve, m.P.Contract.Amount)
+	numReserve := m.buyContractRaw(cs, balance, contracts, numContracts)
 	fmt.Println("Initial Price: ", numReserve)
-	//check enough usd to buy
-	if numReserve > *balance {
-		return -1
-	}
-
-	//add usd to pool
-	m.P.Reserve = m.P.Reserve + numReserve
-
-	//remove contracts from pool
-	m.P.Contract.Amount = m.P.Contract.Amount - numContracts
-
-	//add contracts to user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount + numContracts}
 
 	// perform balancing
 	f := func(x float64) float64 {
@@ -83,15 +69,9 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 		for _, m := range cs.Markets {
 			r := m.P.Reserve
 			c := m.P.Contract.Amount
-			eq = eq + ((r - cpmm.GetAmountOut(x, c, r)) / (c + x))
-			// cpmm.GetInputPrice(x, c, r)
+			eq = eq + ((r - cpmm.GetAmountOut(x, r, c)) / (c + x))
 		}
 		return eq
-	}
-
-	var totalPrice float64 = 0
-	for _, m := range cs.Markets {
-		totalPrice = totalPrice + m.GetRatioFloat64()
 	}
 
 	//TODO: find a quick algorithm for initial guess
@@ -100,9 +80,6 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 
 	result, _ := root.Newton(f, initialGuess, iter)
 	y := result
-
-	//remove usd from user
-	*balance = *balance - y
 
 	oracle.Balance = oracle.Balance + y
 
@@ -136,6 +113,7 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 	fmt.Println("Kept: ", deltaBacking)
 	fmt.Println("Returned: ", numReserve-y)
 	cs.Backing = cs.Backing + deltaBacking
+	*balance = *balance + numReserve - y
 
 	return y
 }
@@ -143,51 +121,24 @@ func (m *Market) BuyContract(cs *ContractSet, balance *float64, contracts *map[s
 // SellContract swaps the amount of contracts specified for reserve
 func (m *Market) SellContract(cs *ContractSet, balance *float64, contracts *map[string]Contract, numContracts float64) float64 {
 	//input = contract, output = reserve
-	numReserve := cpmm.GetAmountOut(numContracts, m.P.Contract.Amount, m.P.Reserve)
-
-	//check enough contracts to sell
-	_, ok := (*contracts)[m.Condition]
-	if !ok {
-		return -1
-	} else if (*contracts)[m.Condition].Amount < numContracts {
-		return -1
-	}
-
-	//remove contracts from user
-	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
-
-	//add contracts to pool
-	m.P.Contract.Amount = m.P.Contract.Amount + numContracts
-
-	//remove usd from pool
-	m.P.Reserve = m.P.Reserve - numReserve
+	numReserve := m.sellContractRaw(cs, balance, contracts, numContracts)
 
 	f := func(x float64) float64 {
 		var eq float64 = -1
 		for _, m := range cs.Markets {
 			r := m.P.Reserve
 			c := m.P.Contract.Amount
-			eq = eq + ((r - cpmm.GetAmountIn(x, r, c)) / (c + x))
+			eq = eq + ((r + cpmm.GetAmountIn(x, r, c)) / (c - x))
 		}
 		return eq
 	}
 
-	var totalPrice float64 = 0
-	for _, m := range cs.Markets {
-		totalPrice = totalPrice + m.GetRatioFloat64()
-	}
-
 	//TODO: find a quick algorithm for initial guess
-	initialGuess := -numReserve
+	initialGuess := numReserve
 	iter := 20
 
 	result, _ := root.Newton(f, initialGuess, iter)
 	y := result
-
-	y = y * -1
-
-	//add usd to user
-	*balance = *balance + y
 
 	oracle.Balance = oracle.Balance + y
 
@@ -218,6 +169,7 @@ func (m *Market) SellContract(cs *ContractSet, balance *float64, contracts *map[
 
 	//add backing to balance the pool
 	cs.Backing = cs.Backing + deltaBacking
+	*balance = *balance + y - numReserve
 
 	return y
 }
@@ -239,6 +191,8 @@ func (m *Market) AddLiquidity(cs *ContractSet, contracts *map[string]Contract, t
 		return -1
 	}
 
+	numPoolTokens := m.P.PoolToken.Amount * (numContracts / m.P.Contract.Amount)
+
 	//remove backing and contracts, add to pool
 	cs.Backing = cs.Backing - requiredReserve
 	(*contracts)[m.Condition] = Contract{m.Condition, (*contracts)[m.Condition].Amount - numContracts}
@@ -246,7 +200,6 @@ func (m *Market) AddLiquidity(cs *ContractSet, contracts *map[string]Contract, t
 	m.P.Reserve = m.P.Reserve + requiredReserve
 
 	// mint pool tokens
-	numPoolTokens := math.Sqrt(requiredReserve * numContracts)
 	(*tokens)[m.Condition] = PoolToken{m.Condition, (*tokens)[m.Condition].Amount + numPoolTokens}
 	m.P.PoolToken.Amount = m.P.PoolToken.Amount + numPoolTokens
 
